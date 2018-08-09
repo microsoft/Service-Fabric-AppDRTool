@@ -1,0 +1,34 @@
+﻿<div ng-controller="SFAppDRToolController">
+    <div class="container-fluid">
+        <div class="modal-header">
+            <div class="col-xs-offset-0">
+                <h2>Applications</h2>
+            </div>
+        </div>
+        <div class="modal-body">
+            <div class="row">
+                <div class="col-xs-8 col-xs-offset-2 text-center">
+                    <div class="row top-buffer" ng-repeat="app in apps.data">
+                            <div class="checkbox">
+                                <label>
+                                    <input type="checkbox"
+                                           name="selectedApps[]"
+                                           ng-checked="selectedApps.indexOf(app) > -1"
+                                           value="{{app}}"
+                                           ng-click="toggleSelection(app)">{{app}}
+                                </label>
+                            </div>
+                    </div>
+                    <div class="modal-footer">
+                        <div class="col-xs-offset-0 text-center">
+                            <button id="btnAdd" class="btn btn-primary" ng-show="selectedApps.length > 0" ng-click="openPolicyModal()">
+                                Continue to Configure
+                            </button>
+                            <button class="btn btn-danger" type="button" ng-click="cancel('configureModalInstance')">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

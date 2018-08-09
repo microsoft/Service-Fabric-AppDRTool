@@ -1,0 +1,41 @@
+﻿<div ng-controller="SFAppDRToolController">
+    <div class="container-fluid">
+        <div class="modal-header">
+            <div class="col-xs-offset-0">
+                <h2>Policy Storage account Details</h2>
+            </div>
+        </div>
+        <div class="modal-body">
+            <div class="row" ng-repeat="policy in policies">
+                <uib-accordion close-others="oneAtATime">
+                    <uib-accordion-group is-open="status.open">
+                        <uib-accordion-heading>
+                            {{policy.policy}} <i class="pull-right glyphicon" ng-class="{'glyphicon-chevron-down': status.open, 'glyphicon-chevron-right': !status.open}"></i>
+                        </uib-accordion-heading>
+                        <form class="col-xs-12 center-block">
+                            <div class="col-xs-offset-0 form-group" ng-if="policy.backupStorage.storageKind == 'AzureBlobStore'">
+                                <input type="text" class="form-control" placeholder="connectionString" ng-model="policy.backupStorage.connectionString" />
+                            </div>
+                            <div class="col-xs-offset-0 form-group" ng-if="policy.backupStorage.storageKind == 'FileShare'">
+                                <input type="text" class="form-control" placeholder="primaryUsername" ng-model="policy.backupStorage.primaryUsername" />
+                            </div>
+                            <div class="col-xs-offset-0 form-group" ng-if="policy.backupStorage.storageKind == 'FileShare'">
+                                <input type="text" class="form-control" placeholder="primaryPassword" ng-model="policy.backupStorage.primaryPassword" />
+                            </div>
+                            <div class="col-xs-offset-0 form-group" ng-if="policy.backupStorage.storageKind == 'FileShare'">
+                                <input type="text" class="form-control" placeholder="secondaryUsername" ng-model="policy.backupStorage.secondaryUsername" />
+                            </div>
+                            <div class="col-xs-offset-0 form-group" ng-if="policy.backupStorage.storageKind == 'FileShare'">
+                                <input type="text" class="form-control" placeholder="secondaryPassword" ng-model="policy.backupStorage.secondaryPassword" />
+                            </div>
+                        </form>
+                    </uib-accordion-group>
+                </uib-accordion>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-success" type="button" ng-click="configure()">Configure</button>
+                <button class="btn btn-danger" type="button" ng-click="cancel('policyModalInstance')">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>

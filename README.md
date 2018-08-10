@@ -1,7 +1,3 @@
----
-services: service-fabric
-platforms: dotnet
----
 
 # Service Fabric Application Disaster Recovery Tool
 The Service Fabric Application Disaster Recovery Tool makes the application in secondary cluster data ready by periodically restoring latest backups available from primary cluster.

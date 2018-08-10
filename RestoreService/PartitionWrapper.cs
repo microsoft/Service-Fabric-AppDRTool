@@ -124,6 +124,9 @@ namespace RestoreService
         [DataMember]
         public string certificateThumbprint { get; set;  }
 
+        [DataMember]
+        public string commonName { get; set; }
+
         public ClusterDetails(string address, string httpEndpoint, string clientConnectionEndpoint)
         {
             this.address = address;
@@ -131,12 +134,13 @@ namespace RestoreService
             this.clientConnectionEndpoint = clientConnectionEndpoint;
         }
 
-        public ClusterDetails(string address, string httpEndpoint, string clientConnectionEndpoint, string certificateThumbprint)
+        public ClusterDetails(string address, string httpEndpoint, string clientConnectionEndpoint, string certificateThumbprint, string commonName)
         {
             this.address = address;
             this.httpEndpoint = httpEndpoint;
             this.clientConnectionEndpoint = clientConnectionEndpoint;
             this.certificateThumbprint = certificateThumbprint;
+            this.commonName = commonName;
         }
     }
 }

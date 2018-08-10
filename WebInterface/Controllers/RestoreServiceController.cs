@@ -61,13 +61,13 @@ namespace WebInterface.Controllers
         }
 
         [HttpGet]
-        [Route("apps/{primarycs}/{primaryThumbprint}/{secondarycs}/{secondaryThumbprint}")]
-        public async Task<IActionResult> GetApplications(String primarycs, String primaryThumbprint, String secondarycs, String secondaryThumbprint)
+        [Route("apps/{primarycs}/{primaryThumbprint}/{primarycname}/{secondarycs}/{secondaryThumbprint}/{secondarycname}")]
+        public async Task<IActionResult> GetApplications(String primarycs, String primaryThumbprint, String primarycname, String secondarycs, String secondaryThumbprint, String secondarycname)
         {
             Dictionary<String, List<List<String>>> applicationsServicesMap = new Dictionary<String, List< List<String> >>();
 
-            FabricClient primaryfc = GetSecureFabricClient(primarycs, primaryThumbprint);
-            FabricClient secondaryfc = GetSecureFabricClient(secondarycs, secondaryThumbprint);
+            FabricClient primaryfc = GetSecureFabricClient(primarycs, primaryThumbprint, primarycname);
+            FabricClient secondaryfc = GetSecureFabricClient(secondarycs, secondaryThumbprint, secondarycname);
 
             FabricClient.QueryClient queryClient = primaryfc.QueryManager;
             ApplicationList appsList = await queryClient.GetApplicationListAsync();
@@ -136,10 +136,9 @@ namespace WebInterface.Controllers
 
         }
 
-        public static FabricClient GetSecureFabricClient(string connectionEndpoint, string thumbprint)
+        public static FabricClient GetSecureFabricClient(string connectionEndpoint, string thumbprint, string cname)
         {
-            string CommonName = "southindia.cloudapp.azure.com";
-            var xc = GetCredentials(thumbprint, thumbprint, CommonName);
+            var xc = GetCredentials(thumbprint, thumbprint, cname);
 
             FabricClient fc;
 
@@ -473,20 +472,17 @@ namespace WebInterface.Controllers
         }
 
         [HttpPost]
-        [Route("configureapp/{primaryClusterAddress}/{primaryThumbprint}/{secondaryClusterAddress}/{secondaryThumbprint}")]
-        public void ConfigureApplication([FromBody]JObject content, string primaryClusterAddress, string primaryThumbprint, string secondaryClusterAddress, string secondaryThumbprint)
+        [Route("configureapp/{primaryClusterAddress}/{primaryThumbprint}/{primaryCommonName}/{secondaryClusterAddress}/{secondaryThumbprint}/{secondaryCommonName}")]
+        public void ConfigureApplication([FromBody]JObject content, string primaryClusterAddress, string primaryThumbprint, string primaryCommonName, string secondaryClusterAddress, string secondaryThumbprint, string secondaryCommonName)
         {
-            //string primaryClientConnectionEndpoint = GetClientConnectionEndpoint(primaryClusterAddress + ":" + primaryHttpEndpoint);
-            //string secondaryClientConnectionEndpoint = GetClientConnectionEndpoint(secondaryClusterAddress + ":" + secondaryHttpEndpoint);
-
             string primaryHttpEndpoint = "19080";
             string secondaryHttpEndpoint = "19080";
 
             string[] primaryClusterDetails = primaryClusterAddress.Split(':');
             string[] secondaryClusterDetails = secondaryClusterAddress.Split(':');
 
-            ClusterDetails primaryCluster = new ClusterDetails(primaryClusterDetails[0], primaryHttpEndpoint, primaryClusterDetails[1], primaryThumbprint);
-            ClusterDetails secondaryCluster = new ClusterDetails(secondaryClusterDetails[0], secondaryHttpEndpoint, secondaryClusterDetails[1], secondaryThumbprint);
+            ClusterDetails primaryCluster = new ClusterDetails(primaryClusterDetails[0], primaryHttpEndpoint, primaryClusterDetails[1], primaryThumbprint, primaryCommonName);
+            ClusterDetails secondaryCluster = new ClusterDetails(secondaryClusterDetails[0], secondaryHttpEndpoint, secondaryClusterDetails[1], secondaryThumbprint, secondaryCommonName);
 
             JArray applicationData = (JArray)content["ApplicationList"];
             JArray policiesData = (JArray)content["PoliciesList"];
@@ -516,8 +512,8 @@ namespace WebInterface.Controllers
 
         // Calls configure service method of restore service
         [HttpPost]
-        [Route("configureservice/{primaryClusterAddress}/{primaryThumbprint}/{secondaryClusterAddress}/{secondaryThumbprint}")]
-        public void ConfigureService([FromBody]JObject content, string primaryClusterAddress, string primaryThumbprint, string secondaryClusterAddress, string secondaryThumbprint)
+        [Route("configureservice/{primaryClusterAddress}/{primaryThumbprint}/{primaryCommonName}/{secondaryClusterAddress}/{secondaryThumbprint}/{secondaryCommonName}")]
+        public void ConfigureService([FromBody]JObject content, string primaryClusterAddress, string primaryThumbprint, string primaryCommonName, string secondaryClusterAddress, string secondaryThumbprint, string secondaryCommonName)
         {
             string primaryHttpEndpoint = "19080";
             string secondaryHttpEndpoint = "19080";
@@ -525,8 +521,8 @@ namespace WebInterface.Controllers
             string[] primaryClusterDetails = primaryClusterAddress.Split(':');
             string[] secondaryClusterDetails = secondaryClusterAddress.Split(':');
 
-            ClusterDetails primaryCluster = new ClusterDetails(primaryClusterDetails[0], primaryHttpEndpoint, primaryClusterDetails[1], primaryThumbprint);
-            ClusterDetails secondaryCluster = new ClusterDetails(secondaryClusterDetails[0], secondaryHttpEndpoint, secondaryClusterDetails[1], secondaryThumbprint);
+            ClusterDetails primaryCluster = new ClusterDetails(primaryClusterDetails[0], primaryHttpEndpoint, primaryClusterDetails[1], primaryThumbprint, primaryCommonName);
+            ClusterDetails secondaryCluster = new ClusterDetails(secondaryClusterDetails[0], secondaryHttpEndpoint, secondaryClusterDetails[1], secondaryThumbprint, secondaryCommonName);
 
             JArray serviceData = (JArray)content["ServiceList"];
             JArray policiesData = (JArray)content["PoliciesList"];

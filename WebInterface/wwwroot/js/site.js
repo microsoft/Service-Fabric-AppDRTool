@@ -124,7 +124,7 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
         console.log(contentData);
         var content = JSON.stringify(contentData);
 
-        $http.post('api/RestoreService/configureapp/' + $rootScope.primaryClusterEndpoint + '/' + $rootScope.primaryClusterThumbprint + '/' + $rootScope.secondaryClusterEndpoint + '/' + $rootScope.secondaryClusterThumbprint, content)
+        $http.post('api/RestoreService/configureapp/' + $rootScope.primaryClusterEndpoint + '/' + $rootScope.primaryClusterThumbprint + '/' + $rootScope.primaryClusterCommonName + '/' + $rootScope.secondaryClusterEndpoint + '/' + $rootScope.secondaryClusterThumbprint + '/' + $rootScope.secondaryClusterCommonName, content)
             .then(function (data, status) {
                 console.log("Calling success function");
                 console.log($scope.appsData);
@@ -161,7 +161,7 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
         console.log(contentData);
         var content = JSON.stringify(contentData);
 
-        $http.post('api/RestoreService/configureservice/' + $rootScope.primaryClusterEndpoint + '/' + $rootScope.primaryClusterThumbprint + '/' + $rootScope.secondaryClusterEndpoint + '/' + $rootScope.secondaryClusterThumbprint, content)
+        $http.post('api/RestoreService/configureservice/' + $rootScope.primaryClusterEndpoint + '/' + $rootScope.primaryClusterThumbprint + '/' + $rootScope.primaryClusterCommonName + '/' + $rootScope.secondaryClusterEndpoint + '/' + $rootScope.secondaryClusterThumbprint + '/' + $rootScope.secondaryClusterCommonName, content)
             .then(function (data, status) {
                 for (var i = 0; i < $scope.appsData[$rootScope.appNameServ].length; i++) {
                     if ($scope.appsData[$rootScope.appNameServ][i][0] == $rootScope.currentServicename) {
@@ -378,11 +378,14 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
         $rootScope.primaryClusterThumbprint = $scope.primSecureThumbp;
         $rootScope.secondaryClusterThumbprint = $scope.secSecureThumbp;
 
+        $rootScope.primaryClusterCommonName = $scope.primaryCommonName;
+        $rootScope.secondaryClusterCommonName = $scope.secondaryCommonName;
+
 
         $location.path("/servConfig");
         $rootScope.splashLoad = true;
 
-        $http.get('api/RestoreService/apps/' + $scope.primaryClusterEndpoint + '/' + $scope.primSecureThumbp + '/' + $scope.secondaryClusterEndpoint + '/' + $scope.secSecureThumbp)
+        $http.get('api/RestoreService/apps/' + $scope.primaryClusterEndpoint + '/' + $scope.primSecureThumbp + '/' + $scope.primaryCommonName + '/' + $scope.secondaryClusterEndpoint + '/' + $scope.secSecureThumbp + '/' + $scope.secondaryCommonName)
             .then(function (data, status) {
                 $rootScope.splashLoad = false;
                 $scope.apps = data;

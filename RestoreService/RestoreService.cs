@@ -394,8 +394,8 @@ namespace RestoreService
         // Maps the paritions of the applications from primary cluster and secondary cluster
         public async Task MapPartitionsOfApplication(Uri applicationName, ClusterDetails primaryCluster, ClusterDetails secondaryCluster, String reliableDictionary)
         {
-            FabricClient primaryFabricClient = GetSecureFabricClient(primaryCluster.address + ':' + primaryCluster.clientConnectionEndpoint, primaryCluster.certificateThumbprint);
-            FabricClient secondaryFabricClient = GetSecureFabricClient(secondaryCluster.address + ':' + secondaryCluster.clientConnectionEndpoint, secondaryCluster.certificateThumbprint);
+            FabricClient primaryFabricClient = GetSecureFabricClient(primaryCluster.address + ':' + primaryCluster.clientConnectionEndpoint, primaryCluster.certificateThumbprint, primaryCluster.commonName);
+            FabricClient secondaryFabricClient = GetSecureFabricClient(secondaryCluster.address + ':' + secondaryCluster.clientConnectionEndpoint, secondaryCluster.certificateThumbprint, secondaryCluster.commonName);
 
             IReliableDictionary<Guid, PartitionWrapper> myDictionary = await this.StateManager.GetOrAddAsync<IReliableDictionary<Guid, PartitionWrapper>>(reliableDictionary);
 
@@ -440,8 +440,8 @@ namespace RestoreService
 
         public async Task MapPartitionsOfService(Uri applicationName, Uri serviceName, ClusterDetails primaryCluster, ClusterDetails secondaryCluster, String reliableDictionary)
         {
-            FabricClient primaryFabricClient = GetSecureFabricClient(primaryCluster.address + ':' + primaryCluster.clientConnectionEndpoint, primaryCluster.certificateThumbprint);
-            FabricClient secondaryFabricClient = GetSecureFabricClient(secondaryCluster.address + ':' + secondaryCluster.clientConnectionEndpoint, secondaryCluster.certificateThumbprint);
+            FabricClient primaryFabricClient = GetSecureFabricClient(primaryCluster.address + ':' + primaryCluster.clientConnectionEndpoint, primaryCluster.certificateThumbprint, primaryCluster.commonName);
+            FabricClient secondaryFabricClient = GetSecureFabricClient(secondaryCluster.address + ':' + secondaryCluster.clientConnectionEndpoint, secondaryCluster.certificateThumbprint, secondaryCluster.commonName);
 
             IReliableDictionary<Guid, PartitionWrapper> myDictionary = await this.StateManager.GetOrAddAsync<IReliableDictionary<Guid, PartitionWrapper>>(reliableDictionary);
 
@@ -456,10 +456,9 @@ namespace RestoreService
             }
         }
 
-        public static FabricClient GetSecureFabricClient(string connectionEndpoint, string thumbprint)
+        public static FabricClient GetSecureFabricClient(string connectionEndpoint, string thumbprint, string cname)
         {
-            string CommonName = "southindia.cloudapp.azure.com";
-            var xc = GetCredentials(thumbprint, thumbprint, CommonName);
+            var xc = GetCredentials(thumbprint, thumbprint, cname);
 
             FabricClient fc;
 

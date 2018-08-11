@@ -41,5 +41,37 @@ namespace PolicyStorageService
         {
 
         }
+
+        public void Encrypt()
+        {
+            if (connectionString != null)
+            {
+                this.connectionString = EncryptionUtil.Encrypt(connectionString);
+            }
+            if (primaryPassword != null)
+            {
+                this.primaryPassword = EncryptionUtil.Encrypt(primaryPassword);
+            }
+            if (secondaryPassword != null)
+            {
+                this.secondaryPassword = EncryptionUtil.Encrypt(secondaryPassword);
+            }
+        }
+
+        public void Decrypt()
+        {
+            if (connectionString != null)
+            {
+                this.connectionString = EncryptionUtil.Decrypt(connectionString);
+            }
+            if (primaryPassword != null)
+            {
+                this.primaryPassword = EncryptionUtil.Decrypt(primaryPassword);
+            }
+            if (secondaryPassword != null)
+            {
+                this.secondaryPassword = EncryptionUtil.Decrypt(secondaryPassword);
+            }
+        }
     }
 }

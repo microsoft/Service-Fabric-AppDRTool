@@ -83,6 +83,7 @@ namespace PolicyStorageService
                     backupStorage.secondaryUsername = entity.backupStorage.secondaryUsername;
                     backupStorage.secondaryPassword = entity.backupStorage.secondaryPassword;
                     backupStorage.friendlyname = entity.backupStorage.friendlyname;
+                    backupStorage.Encrypt();
                 }
                 else
                 {
@@ -115,7 +116,9 @@ namespace PolicyStorageService
                 ConditionalValue<BackupStorage> backupStorage = await myDictionary.TryGetValueAsync(tx, policy);
                 if (backupStorage.HasValue)
                 {
-                    return backupStorage.Value;
+                    BackupStorage bstorage = backupStorage.Value;
+                    bstorage.Decrypt();
+                    return bstorage;
                 }
                 else
                 {

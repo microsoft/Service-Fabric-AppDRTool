@@ -136,6 +136,14 @@ namespace WebInterface.Controllers
 
         }
 
+        [HttpGet]
+        [Route("storedpolicies")]
+        public async Task<IActionResult> GetAllStoredPolices()
+        {
+            List<string> policiesList = await GetStoredPolicies();
+            return this.Json(policiesList);
+        }
+
         public static FabricClient GetSecureFabricClient(string connectionEndpoint, string thumbprint, string cname)
         {
             var xc = GetCredentials(thumbprint, thumbprint, cname);
@@ -618,6 +626,34 @@ namespace WebInterface.Controllers
 
             //if (mappedPartitions.Count == 0) return null;
             return mappedPartitions;
+        }
+
+        public async Task<List<String>> GetStoredPolicies()
+        {
+            FabricClient fabricClient = new FabricClient();
+            ServicePartitionList partitionList = fabricClient.QueryManager.GetPartitionListAsync(new Uri("fabric:/SFAppDRTool/PolicyStorageService")).Result;
+
+            List<String> storedPolicies = new List<String>();
+
+            foreach (Partition partition in partitionList)
+            {
+                List<String> policies = new List<String>();
+                var int64PartitionInfo = partition.PartitionInformation as Int64RangePartitionInformation;
+                long lowKey = (long)int64PartitionInfo?.LowKey;
+                IPolicyStorageService policyStorageServiceClient = ServiceProxy.Create<IPolicyStorageService>(new Uri("fabric:/SFAppDRTool/PolicyStorageService"), new ServicePartitionKey(lowKey));
+                try
+                {
+                    policies = await policyStorageServiceClient.GetAllStoredPolicies();
+                    storedPolicies.AddRange(policies);
+                }
+                catch (Exception ex)
+                {
+                    ServiceEventSource.Current.Message("Web Service: Exception getting the stored polices {0}", ex);
+                    throw;
+                }
+            }
+
+            return storedPolicies;
         }
 
         public async Task<HashSet<String>> GetConfiguredServices()

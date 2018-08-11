@@ -128,6 +128,24 @@ namespace PolicyStorageService
             }
         }
 
+        public async Task<List<String>> GetAllStoredPolicies()
+        {
+            List<String> allBackupStoragePolicies = new List<String>();
+            IReliableDictionary<string, BackupStorage> policiesDictionary = await this.StateManager.GetOrAddAsync<IReliableDictionary<string, BackupStorage>>("storageDictionary");
+
+            using (ITransaction tx = this.StateManager.CreateTransaction())
+            {
+                IAsyncEnumerable<KeyValuePair<string, BackupStorage>> enumerable = await policiesDictionary.CreateEnumerableAsync(tx);
+                IAsyncEnumerator<KeyValuePair<string, BackupStorage>> asyncEnumerator = enumerable.GetAsyncEnumerator();
+                while (await asyncEnumerator.MoveNextAsync(CancellationToken.None))
+                {
+                    allBackupStoragePolicies.Add(asyncEnumerator.Current.Key);
+                }
+            }
+
+            return allBackupStoragePolicies;
+        }
+
         public async Task<BackupStorage> GetStorageInfo(string policy, string primaryClusterConnectionString)
         {
             string URL = "https://" + primaryClusterConnectionString + "/";

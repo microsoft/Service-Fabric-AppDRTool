@@ -12,5 +12,7 @@ namespace PolicyStorageService
         Task<bool> PostStorageDetails(List<PolicyStorageEntity> policies, string primaryClusterConnectionString);
 
         Task<BackupStorage> GetPolicyStorageDetails(String policy);
+
+        Task<List<String>> GetAllStoredPolicies();
     }
 }

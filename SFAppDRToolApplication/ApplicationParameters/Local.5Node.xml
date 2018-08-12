@@ -8,6 +8,6 @@
     <Parameter Name="RestoreService_PartitionCount" Value="1" />
     <Parameter Name="RestoreService_MinReplicaSetSize" Value="1" />
     <Parameter Name="RestoreService_TargetReplicaSetSize" Value="1" />
-    <Parameter Name="PolicyStorageEncryptionKey" Value="abcdefgh12345678"/>
+    <Parameter Name="PolicyStorageEncryptionKey" Value="abcdefgh12345678" />
   </Parameters>
 </Application>

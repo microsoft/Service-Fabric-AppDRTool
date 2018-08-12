@@ -72,6 +72,7 @@ namespace WebInterface.Controllers
             FabricClient.QueryClient queryClient = primaryfc.QueryManager;
             ApplicationList appsList = await queryClient.GetApplicationListAsync();
 
+            HashSet<String> configuredApplications = await GetConfiguredApplications();
             HashSet<String> configuredServices = await GetConfiguredServices();
             HashSet<String> secServices = new HashSet<string>();
 
@@ -564,11 +565,15 @@ namespace WebInterface.Controllers
         /// </summary>
         /// <param name="applicationName"></param>
         /// <returns></returns>
-        [HttpGet]
-        [Route("disconfigure/{applicationName}")]
-        public async Task<string> Disconfigure(string applicationName)
+        [HttpPost]
+        [Route("disconfigureapp")]
+        public async Task<string> DisconfigureApplication([FromBody]JObject content)
         {
             bool successfullyRemoved = true;
+
+            JArray applicationData = (JArray)content["ApplicationList"];
+            List<string> applicationDataObj = JsonConvert.DeserializeObject<List<string>>(applicationData.ToString());
+
             FabricClient fabricClient = new FabricClient();
             ServicePartitionList partitionList = fabricClient.QueryManager.GetPartitionListAsync(new Uri("fabric:/SFAppDRTool/RestoreService")).Result;
             foreach (Partition partition in partitionList)
@@ -578,19 +583,49 @@ namespace WebInterface.Controllers
                 IRestoreService restoreServiceClient = ServiceProxy.Create<IRestoreService>(new Uri("fabric:/SFAppDRTool/RestoreService"), new ServicePartitionKey(lowKey));
                 try
                 {
-                    string applicationRemoved = await restoreServiceClient.Disconfigure("fabric:/" + applicationName);
+                    string applicationRemoved = await restoreServiceClient.DisconfigureApplication(applicationDataObj[0]);
                     if(applicationRemoved == null) successfullyRemoved = false;
                 }
                 catch (Exception ex)
                 {
-                    ServiceEventSource.Current.Message("Web Service: Exception Disconfiguring {0}", ex);
+                    ServiceEventSource.Current.Message("Web Service: Exception Disconfiguring Application {0}", ex);
                     throw;
                 }
             }
-            if (successfullyRemoved) return applicationName;
+            if (successfullyRemoved) return applicationDataObj[0];
             return null;
         }
 
+        [HttpPost]
+        [Route("disconfigureservice")]
+        public async Task<string> DisconfigureService([FromBody]JObject content)
+        {
+            bool successfullyRemoved = true;
+
+            JArray serviceData = (JArray)content["ServiceList"];
+            List<string> serviceDataObj = JsonConvert.DeserializeObject<List<string>>(serviceData.ToString());
+
+            FabricClient fabricClient = new FabricClient();
+            ServicePartitionList partitionList = fabricClient.QueryManager.GetPartitionListAsync(new Uri("fabric:/SFAppDRTool/RestoreService")).Result;
+            foreach (Partition partition in partitionList)
+            {
+                var int64PartitionInfo = partition.PartitionInformation as Int64RangePartitionInformation;
+                long lowKey = (long)int64PartitionInfo?.LowKey;
+                IRestoreService restoreServiceClient = ServiceProxy.Create<IRestoreService>(new Uri("fabric:/SFAppDRTool/RestoreService"), new ServicePartitionKey(lowKey));
+                try
+                {
+                    string serviceRemoved = await restoreServiceClient.DisconfigureService(serviceDataObj[0]);
+                    if (serviceRemoved == null) successfullyRemoved = false;
+                }
+                catch (Exception ex)
+                {
+                    ServiceEventSource.Current.Message("Web Service: Exception Disconfiguring Service {0}", ex);
+                    throw;
+                }
+            }
+            if (successfullyRemoved) return serviceDataObj[0];
+            return null;
+        }
 
         /// <summary>
         /// This calls GetStatus method of restore service.
@@ -631,26 +666,18 @@ namespace WebInterface.Controllers
         public async Task<List<String>> GetStoredPolicies()
         {
             FabricClient fabricClient = new FabricClient();
-            ServicePartitionList partitionList = fabricClient.QueryManager.GetPartitionListAsync(new Uri("fabric:/SFAppDRTool/PolicyStorageService")).Result;
-
             List<String> storedPolicies = new List<String>();
 
-            foreach (Partition partition in partitionList)
+            IPolicyStorageService policyStorageClient = ServiceProxy.Create<IPolicyStorageService>(new Uri("fabric:/SFAppDRTool/PolicyStorageService"));
+
+            try
             {
-                List<String> policies = new List<String>();
-                var int64PartitionInfo = partition.PartitionInformation as Int64RangePartitionInformation;
-                long lowKey = (long)int64PartitionInfo?.LowKey;
-                IPolicyStorageService policyStorageServiceClient = ServiceProxy.Create<IPolicyStorageService>(new Uri("fabric:/SFAppDRTool/PolicyStorageService"), new ServicePartitionKey(lowKey));
-                try
-                {
-                    policies = await policyStorageServiceClient.GetAllStoredPolicies();
-                    storedPolicies.AddRange(policies);
-                }
-                catch (Exception ex)
-                {
-                    ServiceEventSource.Current.Message("Web Service: Exception getting the stored polices {0}", ex);
-                    throw;
-                }
+                storedPolicies = await policyStorageClient.GetAllStoredPolicies();
+            }
+            catch (Exception ex)
+            {
+                ServiceEventSource.Current.Message("Web Service: Exception getting the stored polices {0}", ex);
+                throw;
             }
 
             return storedPolicies;
@@ -665,6 +692,34 @@ namespace WebInterface.Controllers
                 configuredServices.Add(partition.serviceName.ToString());
             }
             return configuredServices;
+        }
+
+        public async Task<HashSet<String>> GetConfiguredApplications()
+        {
+            FabricClient fabricClient = new FabricClient();
+            ServicePartitionList partitionList = fabricClient.QueryManager.GetPartitionListAsync(new Uri("fabric:/SFAppDRTool/RestoreService")).Result;
+
+            List<String> configuredApplicationNames = new List<String>();
+
+            foreach (Partition partition in partitionList)
+            {
+                List<String> configAppNames = new List<String>();
+                var int64PartitionInfo = partition.PartitionInformation as Int64RangePartitionInformation;
+                long lowKey = (long)int64PartitionInfo?.LowKey;
+                IRestoreService restoreServiceClient = ServiceProxy.Create<IRestoreService>(new Uri("fabric:/SFAppDRTool/RestoreService"), new ServicePartitionKey(lowKey));
+                try
+                {
+                    configAppNames = await restoreServiceClient.GetConfiguredApplicationNames();
+                    configuredApplicationNames.AddRange(configAppNames);
+                }
+                catch (Exception ex)
+                {
+                    ServiceEventSource.Current.Message("Web Service: Exception getting all configured application names {0}", ex);
+                    throw;
+                }
+            }
+
+            return new HashSet<String>(configuredApplicationNames);
         }
 
         public string GetClientConnectionEndpoint(string clusterConnectionString)

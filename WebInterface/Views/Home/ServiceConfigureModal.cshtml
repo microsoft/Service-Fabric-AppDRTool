@@ -65,7 +65,9 @@
                     <div data-role="panel"
                          data-title-caption="<h5>{{policy.policy}}</h5>"
                          data-collapsible="true"
-                         data-collapsed="true">
+                         data-collapsed="true"
+                         data-cls-title="bg-yellow fg-black"
+                         ng-if="!(storedPolicies.indexOf(policy.policy) >= 0)">
                         <form>
                             <div class="form-group" ng-if="policy.backupStorage.storageKind == 'AzureBlobStore'">
                                 <label>Connection String</label>
@@ -89,6 +91,14 @@
                             </div>
                         </form>
                     </div>
+                    <div data-role="panel"
+                         data-title-caption="<h5>{{policy.policy}}</h5>"
+                         data-collapsible="true"
+                         data-collapsed="true"
+                         data-cls-title="bg-green fg-white"
+                         ng-if="storedPolicies.indexOf(policy.policy) >= 0">
+                        Policy details exist.
+                    </div>
                 </div>
                 <div ng-if="serviceNoPolicyFoundFlag">
                     Could not find any associated policies. Please try again or ensure service has policies configured and exists on secondary cluster.
@@ -96,6 +106,7 @@
             </div>
             <div class="dialog-actions">
                 <button class="button js-dialog-close">Back</button>
+                <button class="button primary" ng-if="!serviceConfigLoad && !serviceNoPolicyFoundFlag" ng-click="editPoliciesOfService()">Edit Policies</button>
                 <button class="button success js-dialog-close" ng-if="!serviceConfigLoad && !serviceNoPolicyFoundFlag" ng-click="configureService()">Configure</button>
             </div>
         </div>
@@ -108,7 +119,9 @@
                     <div data-role="panel"
                          data-title-caption="<h5>{{policy.policy}}</h5>"
                          data-collapsible="true"
-                         data-collapsed="true">
+                         data-collapsed="true"
+                         data-cls-title="bg-yellow fg-black"
+                         ng-if="!(storedPolicies.indexOf(policy.policy) >= 0)">
                         <form>
                             <div class="form-group" ng-if="policy.backupStorage.storageKind == 'AzureBlobStore'">
                                 <label>Connection String</label>
@@ -132,6 +145,14 @@
                             </div>
                         </form>
                     </div>
+                    <div data-role="panel"
+                         data-title-caption="<h5>{{policy.policy}}</h5>"
+                         data-collapsible="true"
+                         data-collapsed="true"
+                         data-cls-title="bg-green fg-white"
+                         ng-if="storedPolicies.indexOf(policy.policy) >= 0">
+                        Policy details exist.
+                    </div>
                 </div>
                 <div ng-if="appNoPolicyFoundFlag">
                     Could not find any associated policies. Please try again or ensure application has policies configured.
@@ -139,105 +160,11 @@
             </div>
             <div class="dialog-actions">
                 <button class="button js-dialog-close">Back</button>
+                <button class="button primary" ng-if="!appConfigLoad && !appNoPolicyFoundFlag" ng-click="editPoliciesOfApplication()">Edit Policies</button>
                 <button class="button success js-dialog-close" ng-if="!appConfigLoad && !appNoPolicyFoundFlag" ng-click="configureApplication()">Configure</button>
             </div>
         </div>
 
-        <!-- <div data-role="panel"
-         data-title-caption="<h4>Application 1</h4>"
-         data-collapsible="true">
-        <div>
-            <button style="margin-top:10px; width: 100% !important;" class="button rounded success large"
-                    onclick="Metro.dialog.open('#demoDialog1')">
-                Stateful Service Java 1
-            </button>
-        </div>
-        <div>
-            <button style="margin-top:10px; width: 100% !important;" class="button rounded yellow large"
-                    onclick="Metro.dialog.open('#demoDialog1')">
-                Stateful Service Java 2
-            </button>
-        </div>
-
-        <div>
-            <button style="margin-top:10px; width: 100% !important;" class="button rounded success large"
-                    onclick="Metro.dialog.open('#demoDialog1')">
-                Actor Service .NET 1
-            </button>
-        </div>
-        <div>
-            <button style="margin-top:10px; width: 100% !important; margin-bottom: 0px !important;" class="button rounded alert large"
-                    onclick="Metro.dialog.open('#demoDialog1')">
-                Actor Service .NET 2
-            </button>
-        </div>
-
-        <div>
-            <button style="margin-top:10px; width: 100% !important;" class="button rounded large"
-                    onclick="Metro.dialog.open('#demoDialog1')">
-                Stateless Service 1
-            </button>
-        </div>
-    </div>
-
-
-    <div class="dialog" data-role="dialog" id="demoDialog1">
-        <div class="dialog-title">Policy Configuration</div>
-        <div class="dialog-content">
-            <div data-role="panel"
-                 data-title-caption="Policy 1"
-                 data-collapsible="true"
-                 data-collapsed="true">
-                <form>
-                    <div class="form-group">
-                        <label>Connection String</label>
-                        <input type="text" placeholder="Connection String" ng-model="connectionString" />
-                    </div>
-                    <div class="form-group">
-                        <button ng-click="" class="button success">Configure</button>
-                    </div>
-                </form>
-            </div>
-
-            <div data-role="panel"
-                 data-title-caption="Policy 2"
-                 data-collapsible="true"
-                 data-collapsed="true">
-                <form>
-                    <div class="form-group">
-                        <label>Primary Username</label>
-                        <input type="text" placeholder="Username" ng-model="primaryUsername" />
-                    </div>
-                    <div class="form-group">
-                        <label>Primary Password</label>
-                        <input type="password" placeholder="Password" ng-model="primaryPassword" />
-                    </div>
-                    <div class="form-group">
-                        <label>Secondary Username</label>
-                        <input type="text" placeholder="Username" ng-model="secondaryUsername" />
-                    </div>
-                    <div class="form-group">
-                        <label>Secondary Password</label>
-                        <input type="password" placeholder="Password" ng-model="secondaryPassword" />
-                    </div>
-                    <div class="form-group">
-                        <button ng-click="" class="button success">Configure</button>
-                    </div>
-                </form>
-            </div>
-
-            <div data-role="panel"
-                 data-title-caption="Policy 3"
-                 data-collapsible="true"
-                 data-collapsed="true">
-                <p>Already configured.</p>
-            </div>
-        </div>
-        <div class="dialog-actions">
-            <button class="button js-dialog-close">Back</button>
-            <button class="button success js-dialog-close" onclick="runToast('Successfully Configured.')">Configure</button>
-        </div>
-    </div> -->
         <button class="button success" ng-if="!splashLoad">
             <a href="/#!/">Next</a>
         </button>

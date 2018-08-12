@@ -230,6 +230,30 @@ namespace RestoreService
             IPolicyStorageService policyStorageClient = ServiceProxy.Create<IPolicyStorageService>(new Uri("fabric:/SFAppDRTool/PolicyStorageService"));
             bool stored = policyStorageClient.PostStorageDetails(policyDetails, primaryCluster.address + ':' + primaryCluster.httpEndpoint).GetAwaiter().GetResult();
             await MapPartitionsOfApplication(new Uri(application), primaryCluster, secondaryCluster, "partitionDictionary");
+            IReliableDictionary<String, String> applicationsStatusDictionary = await this.StateManager.GetOrAddAsync<IReliableDictionary<String, String>>("applicationStatusDictionary");
+            using (var tx = this.StateManager.CreateTransaction())
+            {
+                var result = await applicationsStatusDictionary.TryAddAsync(tx, application, "Configured");
+                await tx.CommitAsync();
+            }
+        }
+
+        public async Task<List<String>> GetConfiguredApplicationNames()
+        {
+            List<String> configuredApplicationNames = new List<String>();
+            IReliableDictionary<String, String> applicationsStatusDictionary = await this.StateManager.GetOrAddAsync<IReliableDictionary<String, String>>("applicationStatusDictionary");
+            using (ITransaction tx = this.StateManager.CreateTransaction())
+            {
+                IAsyncEnumerable<KeyValuePair<String, String>> enumerable = await applicationsStatusDictionary.CreateEnumerableAsync(tx);
+                IAsyncEnumerator<KeyValuePair<String, String>> asyncEnumerator = enumerable.GetAsyncEnumerator();
+                while (await asyncEnumerator.MoveNextAsync(CancellationToken.None))
+                {
+                    configuredApplicationNames.Add(asyncEnumerator.Current.Key);
+                }
+                await tx.CommitAsync();
+            }
+
+            return configuredApplicationNames;
         }
 
         public async Task ConfigureService(String applicationName, String serviceName, List<PolicyStorageEntity> policyDetails, ClusterDetails primaryCluster, ClusterDetails secondaryCluster)
@@ -241,7 +265,7 @@ namespace RestoreService
         }
 
         // An interface method which is for disconfiguring the appliations thereby deleting their entries in reliable dictionary.
-        public async Task<string> Disconfigure(string applicationName)
+        public async Task<string> DisconfigureApplication(string applicationName)
         {
             List<Guid> keysToRemove = new List<Guid>();
             IReliableDictionary<Guid, PartitionWrapper> myDictionary = await this.StateManager.GetOrAddAsync<IReliableDictionary<Guid, PartitionWrapper>>("partitionDictionary");
@@ -272,7 +296,50 @@ namespace RestoreService
                 }
                 await tx.CommitAsync();
             }
+
+            IReliableDictionary<String, String> applicationsStatusDictionary = await this.StateManager.GetOrAddAsync<IReliableDictionary<String, String>>("applicationStatusDictionary");
+            using (ITransaction tx = this.StateManager.CreateTransaction())
+            {
+                await applicationsStatusDictionary.TryRemoveAsync(tx, applicationName);
+                await tx.CommitAsync();
+            }
+
             if (allPartitionsRemoved) return applicationName;
+            return null;
+        }
+
+        public async Task<string> DisconfigureService(string serviceName)
+        {
+            List<Guid> keysToRemove = new List<Guid>();
+            IReliableDictionary<Guid, PartitionWrapper> myDictionary = await this.StateManager.GetOrAddAsync<IReliableDictionary<Guid, PartitionWrapper>>("partitionDictionary");
+            using (ITransaction tx = this.StateManager.CreateTransaction())
+            {
+                IAsyncEnumerable<KeyValuePair<Guid, PartitionWrapper>> enumerable = await myDictionary.CreateEnumerableAsync(tx);
+                IAsyncEnumerator<KeyValuePair<Guid, PartitionWrapper>> asyncEnumerator = enumerable.GetAsyncEnumerator();
+                while (await asyncEnumerator.MoveNextAsync(CancellationToken.None))
+                {
+                    PartitionWrapper secondaryPartition = asyncEnumerator.Current.Value;
+                    if (secondaryPartition.serviceName.ToString().Equals(serviceName))
+                    {
+                        keysToRemove.Add(asyncEnumerator.Current.Key);
+                    }
+                }
+                await tx.CommitAsync();
+            }
+            bool allPartitionsRemoved = true;
+            using (ITransaction tx = this.StateManager.CreateTransaction())
+            {
+                foreach (Guid key in keysToRemove)
+                {
+                    ConditionalValue<PartitionWrapper> value = myDictionary.TryRemoveAsync(tx, key).Result;
+                    if (!value.HasValue)
+                    {
+                        allPartitionsRemoved = false;
+                    }
+                }
+                await tx.CommitAsync();
+            }
+            if (allPartitionsRemoved) return serviceName;
             return null;
         }
 

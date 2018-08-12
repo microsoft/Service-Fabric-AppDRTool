@@ -8,7 +8,7 @@
     <Parameter Name="RestoreService_MinReplicaSetSize" DefaultValue="1" />
     <Parameter Name="RestoreService_PartitionCount" DefaultValue="1" />
     <Parameter Name="RestoreService_TargetReplicaSetSize" DefaultValue="1" />
-    <Parameter Name="PolicyStorageEncryptionKey" DefaultValue=""/>
+    <Parameter Name="PolicyStorageEncryptionKey" DefaultValue="" />
   </Parameters>
   <!-- Import the ServiceManifest from the ServicePackage. The ServiceManifestName and ServiceManifestVersion 
        should match the Name and Version attributes of the ServiceManifest element defined in the 
@@ -33,7 +33,6 @@
     <ServiceManifestRef ServiceManifestName="RestoreServicePkg" ServiceManifestVersion="1.0.0" />
     <ConfigOverrides />
   </ServiceManifestImport>
-  
   <DefaultServices>
     <!-- The section below creates instances of service types, when an instance of this 
          application type is created. You can also create one or more instances of service type using the 

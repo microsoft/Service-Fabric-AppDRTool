@@ -139,6 +139,21 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
             });
     }
 
+    $scope.disconfigureApplication = function () {
+        var applicationName = $rootScope.currentAppname;
+
+        var contentData = {};
+        contentData.ApplicationList = [applicationName];
+
+        $http.post('api/RestoreService/disconfigureapp/', content)
+            .then(function (data, status) {
+                // Disconfigure successful
+                runToast("Application successfuly disabled for backup.", "success");
+            }, function (data, status) {
+                // Disconfigure unsuccessful
+                runToast("Application could not be disabled for backup. Please try again.", "alert");
+            });
+    }
 
     $scope.configureService = function () {
 
@@ -174,8 +189,23 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
             });
     }
 
-    
+    $scope.disconfigureService = function () {
+        var serviceName = $rootScope.currentServicename;
 
+        var contentData = {};
+        contentData.ServiceList = [serviceName];
+
+        $http.post('api/RestoreService/disconfigureservice/', content)
+            .then(function (data, status) {
+                // Disconfigure successful
+                runToast("Service successfuly disabled for backup.", "success");
+            }, function (data, status) {
+                // Disconfigure unsuccessful
+                runToast("Service could not be disabled for backup. Please try again.", "alert");
+            });
+    }
+
+   
     $scope.cancel = function (modalInstance) {
         if (modalInstance === 'configureModalInstance')
             $scope.configureModalInstance.dismiss();
@@ -295,6 +325,7 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
     };
 
     $scope.openServicePolicyModal = function (serviceName) {
+        $scope.getStoredPolicies();
         $rootScope.currentServicename = serviceName;
         serviceN = serviceName.replace("fabric:/", "");
         serviceN = serviceN.replace("/", "_");
@@ -319,6 +350,7 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
     }
 
     $scope.openAppPolicyModal = function (appName) {
+        $scope.getStoredPolicies();
         $rootScope.currentAppname = appName;
         appNameN = appName.replace("fabric:/", "");
         clusterEndp = $rootScope.primaryClusterEndpoint.replace(":19000", ":19080");
@@ -402,7 +434,24 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
                 runToast('Please check the cluster details and try again', 'alert');
             });
 
+        $scope.getStoredPolicies();
+
     };
+
+    $scope.getStoredPolicies = function () {
+        $http.get('api/RestoreService/storedpolicies')
+            .then(function (data, status) {
+                $scope.storedPolicies = data.data;
+                $rootScope.storedPolicies = $scope.storedPolicies;
+                console.log("Stored policies are..");
+                console.log($rootScope.storedPolicies);
+            }, function (data, status) {
+                $scope.storedPolicies = undefined;
+                runToast('Could not load all stored policies. Please try again.', 'alert');
+            });
+    }
+
+
 
     $scope.getAppsSecure = function () {
         $rootScope.primaryClusterEndpoint = $scope.primaryClusterEndpoint;

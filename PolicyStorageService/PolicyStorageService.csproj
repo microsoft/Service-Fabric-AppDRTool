@@ -129,6 +129,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BackupStorage.cs" />
+    <Compile Include="EncryptionUtil.cs" />
     <Compile Include="IPolicyStorageService.cs" />
     <Compile Include="PolicyStorageEntity.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

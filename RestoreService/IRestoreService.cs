@@ -18,7 +18,11 @@ namespace RestoreService
 
         Task ConfigureService(String applicationName, String serviceName, List<PolicyStorageEntity> policies, ClusterDetails primaryCluster, ClusterDetails secondaryCluster);
 
-        Task<string> Disconfigure(string applicationName);
+        Task<List<String>> GetConfiguredApplicationNames();
+
+        Task<string> DisconfigureApplication(string applicationName);
+
+        Task<string> DisconfigureService(string serviceName);
 
         Task<List<PartitionWrapper>> GetStatus();
 

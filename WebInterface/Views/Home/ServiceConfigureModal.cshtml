@@ -13,8 +13,11 @@
             <div data-role="panel"
                  data-title-caption="<h4>{{appName}}</h4>"
                  data-collapsible="true">
-                <button style="width: 100% !important;" class="button rounded success large"
-                        ng-click="openAppPolicyModal(appName)">
+                <button style="width: 100% !important;" class="button rounded large"
+                        ng-click="openAppPolicyModal(appName, appsStatusData[appName])"
+                        ng-class="{'success' : appsStatusData[appName] == 'Configured',
+                                   'yellow'  : appsStatusData[appName] == 'NotConfigured',
+                                   'alert'   : appsStatusData[appName] == 'NotExist'}">
                     Configure {{appName}} for DR
                 </button>
                 <div style="margin-top: 10px; border-bottom: 1px solid #dfdfdf;">
@@ -31,7 +34,7 @@
                         <tr ng-repeat="service in appsData[appName]">
                             <td>
                                 <button style="width: 100% !important;" class="button rounded large"
-                                        ng-click="openServicePolicyModal(service[0])"
+                                        ng-click="openServicePolicyModal(service[0], service[1])"
                                         ng-class="{'success' : service[1] == 'Configured',
                                                    'yellow'  : service[1] == 'NotConfigured',
                                                    'alert'   : service[1] == 'NotExist'}">
@@ -107,7 +110,8 @@
             <div class="dialog-actions">
                 <button class="button js-dialog-close">Back</button>
                 <button class="button primary" ng-if="!serviceConfigLoad && !serviceNoPolicyFoundFlag" ng-click="editPoliciesOfService()">Edit Policies</button>
-                <button class="button success js-dialog-close" ng-if="!serviceConfigLoad && !serviceNoPolicyFoundFlag" ng-click="configureService()">Configure</button>
+                <button class="button alert js-dialog-close" ng-if="!serviceConfigLoad && !serviceNoPolicyFoundFlag && serviceDisableFlag" ng-click="disconfigureService()">Disable</button>
+                <button class="button success js-dialog-close" ng-if="!serviceConfigLoad && !serviceNoPolicyFoundFlag && !serviceDisableFlag" ng-click="configureService()">Configure</button>
             </div>
         </div>
 
@@ -161,7 +165,8 @@
             <div class="dialog-actions">
                 <button class="button js-dialog-close">Back</button>
                 <button class="button primary" ng-if="!appConfigLoad && !appNoPolicyFoundFlag" ng-click="editPoliciesOfApplication()">Edit Policies</button>
-                <button class="button success js-dialog-close" ng-if="!appConfigLoad && !appNoPolicyFoundFlag" ng-click="configureApplication()">Configure</button>
+                <button class="button alert js-dialog-close" ng-if="!appConfigLoad && !appNoPolicyFoundFlag && appDisableFlag" ng-click="disconfigureApplication()">Disable</button>
+                <button class="button success js-dialog-close" ng-if="!appConfigLoad && !appNoPolicyFoundFlag && !appDisableFlag" ng-click="configureApplication()">Configure</button>
             </div>
         </div>
 

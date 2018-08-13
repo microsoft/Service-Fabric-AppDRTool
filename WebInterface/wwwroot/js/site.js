@@ -128,6 +128,7 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
             .then(function (data, status) {
                 console.log("Calling success function");
                 console.log($scope.appsData);
+                $scope.appsStatusData[applicationName] = "Configured"; 
                 for (var i = 0; i < $scope.appsData[applicationName].length; i++) {
                     if ($scope.appsData[applicationName][i][1] == "NotConfigured") {
                         $scope.appsData[applicationName][i][1] = "Configured";
@@ -148,6 +149,12 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
         $http.post('api/RestoreService/disconfigureapp/', content)
             .then(function (data, status) {
                 // Disconfigure successful
+                $scope.appsStatusData[applicationName] = "NotConfigured";
+                for (var i = 0; i < $scope.appsData[applicationName].length; i++) {
+                    if ($scope.appsData[applicationName][i][1] == "Configured") {
+                        $scope.appsData[applicationName][i][1] = "NotConfigured";
+                    }
+                }
                 runToast("Application successfuly disabled for backup.", "success");
             }, function (data, status) {
                 // Disconfigure unsuccessful
@@ -198,6 +205,11 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
         $http.post('api/RestoreService/disconfigureservice/', content)
             .then(function (data, status) {
                 // Disconfigure successful
+                for (var i = 0; i < $scope.appsData[$rootScope.appNameServ].length; i++) {
+                    if ($scope.appsData[$rootScope.appNameServ][i][0] == $rootScope.currentServicename) {
+                        $scope.appsData[$rootScope.appNameServ][i][1] = "NotConfigured";
+                    }
+                }
                 runToast("Service successfuly disabled for backup.", "success");
             }, function (data, status) {
                 // Disconfigure unsuccessful
@@ -324,9 +336,15 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
             });
     };
 
-    $scope.openServicePolicyModal = function (serviceName) {
+    $scope.openServicePolicyModal = function (serviceName, serviceStatus) {
         $scope.getStoredPolicies();
         $rootScope.currentServicename = serviceName;
+        $rootScope.serviceDisableFlag = false;
+
+        if (serviceStatus == 'Configured') {
+            $rootScope.serviceDisableFlag = true;
+        }
+
         serviceN = serviceName.replace("fabric:/", "");
         serviceN = serviceN.replace("/", "_");
         console.log("The service name is " + serviceN);
@@ -349,9 +367,15 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
             });
     }
 
-    $scope.openAppPolicyModal = function (appName) {
+    $scope.openAppPolicyModal = function (appName, appStatus) {
         $scope.getStoredPolicies();
         $rootScope.currentAppname = appName;
+        $rootScope.appDisableFlag = false;
+
+        if (appStatus == 'Configured') {
+            $rootScope.appDisableFlag = true;
+        }
+
         appNameN = appName.replace("fabric:/", "");
         clusterEndp = $rootScope.primaryClusterEndpoint.replace(":19000", ":19080");
         Metro.dialog.open('#appPolicyConfigModal');
@@ -422,10 +446,20 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
                 $rootScope.splashLoad = false;
                 $scope.apps = data;
 
-                $scope.appsData = data['data'];
+                var appStatusData = {};
+                var datainit = data.data;
+                for (var key in datainit) {
+                    var appStatus = datainit[key].shift();
+                    appStatusData[key] = appStatus[1];
+                }
+
+                $scope.appsStatusData = appStatusData;
+                $scope.appsData = datainit;
                 $scope.appsKeys = Object.keys($scope.appsData);
                 $rootScope.appsData = $scope.appsData;
                 $rootScope.appsKeys = $scope.appsKeys;
+                $rootScope.appsStatusData = $scope.appsStatusData;
+                console.log($scope.appsStatusData);
                 console.log($scope.appsData);
                 console.log($scope.appsKeys);
             }, function (data, status) {

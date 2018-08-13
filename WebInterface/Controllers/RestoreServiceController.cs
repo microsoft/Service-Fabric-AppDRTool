@@ -79,19 +79,40 @@ namespace WebInterface.Controllers
             foreach (Application application in appsList)
             {
                 string applicationName = application.ApplicationName.ToString();
+                string applicationStatus = "NotConfigured";
 
                 ServiceList services = await primaryfc.QueryManager.GetServiceListAsync(new Uri(applicationName));
 
-                ServiceList secondaryServices = await secondaryfc.QueryManager.GetServiceListAsync(new Uri(applicationName));
+                ServiceList secondaryServices;
 
-                foreach (Service service in secondaryServices)
+                try
                 {
-                    secServices.Add(service.ServiceName.ToString());
+                    secondaryServices = await secondaryfc.QueryManager.GetServiceListAsync(new Uri(applicationName));
+
+                    foreach (Service service in secondaryServices)
+                    {
+                        secServices.Add(service.ServiceName.ToString());
+                    }
+                }
+                catch (Exception e)
+                {
+                    ServiceEventSource.Current.Message("Web Service: Could not find application on secondary cluster: {0}", e);
+                    applicationStatus = "NotExist";
                 }
 
-
-
+                if (configuredApplications.Contains(applicationName))
+                {
+                    applicationStatus = "Configured";
+                }
+                
                 List<List<String>> serviceList = new List<List<String>>();
+                List<String> appStatusList = new List<String>();
+
+                appStatusList.Add(applicationName);
+                appStatusList.Add(applicationStatus);
+
+                serviceList.Add(appStatusList);
+
                 foreach (Service service in services)
                 {
                     List<String> serviceInfo = new List<String>();

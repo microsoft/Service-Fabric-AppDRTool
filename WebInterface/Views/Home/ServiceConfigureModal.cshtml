@@ -7,7 +7,7 @@
 <div ng-controller="SFAppDRToolController" ng-init= "refresh()">
     <div class="container" style="margin-top: 20px;">
         <h1 class="text-center" style="margin-bottom: 10px;">SF Application Disaster Recovery Tool</h1>
-        <div ng-if="splashLoad" style="margin: 0 auto;" data-role="activity" data-type="ring" data-style="dark"></div>
+        <div ng-if="splashLoad" style="margin: 0 auto; padding-top: 100px;" data-role="activity" data-type="ring" data-style="dark"></div>
         <h2 ng-if="!splashLoad">Applications</h2>
         <div ng-repeat="appName in appsKeys">
             <div data-role="panel"

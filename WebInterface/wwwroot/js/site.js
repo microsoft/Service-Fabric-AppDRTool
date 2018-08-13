@@ -53,6 +53,11 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
                 console.log("Calling from status function");
                 console.log($rootScope.partitionsStatus);
 
+                $scope.transformPartitionsStatus();
+
+                console.log("Transformed partitions status..");
+                console.log($rootScope.applicationsServicesStatus);
+
                 var appsConfigured = [];
 
                 for (var i in $rootScope.partitionsStatus) {
@@ -74,6 +79,37 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
                 nextLoad(++errorCount * 2 * loadTime);   // If current request fails next load will be delayed
             });
     };
+
+    $scope.transformPartitionsStatus = function () {
+        var partitionsStatus = $rootScope.partitionsStatus;
+        var applicationsStatus = {};
+        for (var i = 0; i < partitionsStatus.length; i++) {
+            var partitionStatus = partitionsStatus[i];
+            var applicationName = partitionStatus.applicationName;
+            var serviceName = partitionStatus.serviceName;
+            applicationsStatus[applicationName] = applicationsStatus[applicationName] || {};
+            applicationsStatus[applicationName]['data'] = applicationsStatus[applicationName]['data'] || {};
+            applicationsStatus[applicationName]['status'] = applicationsStatus[applicationName]['status'] || '';
+            applicationsStatus[applicationName]['data'][serviceName] = applicationsStatus[applicationName]['data'][serviceName] || {};
+            applicationsStatus[applicationName]['data'][serviceName]['data'] = applicationsStatus[applicationName]['data'][serviceName]['data'] || [];
+            applicationsStatus[applicationName]['data'][serviceName]['status'] = applicationsStatus[applicationName]['data'][serviceName]['status'] || '';
+
+            applicationsStatus[applicationName]['data'][serviceName]['data'].push({
+                'primaryPartitionId': partitionStatus.primaryPartitionId,
+                'secondaryPartitionId': partitionStatus.partitionId,
+                'lastBackupRestored': partitionStatus.lastBackupRestored,
+                'currentlyUnderRestore': partitionStatus.currentlyUnderRestore,
+                'latestBackupAvailable': partitionStatus.latestBackupAvailable,
+                'restoreState': partitionStatus.restoreState
+            });
+
+            if (partitionsStatus.restoreState == 'Failure') {
+                applicationsStatus[applicationName]['data'][serviceName]['status'] = 'Failure';
+                applicationsStatus[applicationName]['status'] = 'Failure';
+            }
+        }
+        $rootScope.applicationsServicesStatus = applicationsStatus;
+    }
 
     var cancelNextLoad = function () {
         $timeout.cancel(loadPromise);
@@ -146,6 +182,8 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
         var contentData = {};
         contentData.ApplicationList = [applicationName];
 
+        var content = JSON.stringify(contentData);
+
         $http.post('api/RestoreService/disconfigureapp/', content)
             .then(function (data, status) {
                 // Disconfigure successful
@@ -199,8 +237,16 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
     $scope.disconfigureService = function () {
         var serviceName = $rootScope.currentServicename;
 
+        var names = serviceName.split('/');
+        names.pop();
+        var appName = names.join('/');
+        console.log("App name is " + appName);
+        $rootScope.appNameServ = appName;
+
         var contentData = {};
         contentData.ServiceList = [serviceName];
+
+        var content = JSON.stringify(contentData);
 
         $http.post('api/RestoreService/disconfigureservice/', content)
             .then(function (data, status) {

@@ -82,6 +82,7 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
 
     $scope.transformPartitionsStatus = function () {
         var partitionsStatus = $rootScope.partitionsStatus;
+        var applicationToServiceNames = {};
         var applicationsStatus = {};
         for (var i = 0; i < partitionsStatus.length; i++) {
             var partitionStatus = partitionsStatus[i];
@@ -94,8 +95,14 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
             applicationsStatus[applicationName]['data'][serviceName]['data'] = applicationsStatus[applicationName]['data'][serviceName]['data'] || [];
             applicationsStatus[applicationName]['data'][serviceName]['status'] = applicationsStatus[applicationName]['data'][serviceName]['status'] || '';
 
+            if (i == 1) {
+                partitionStatus.restoreState = 'Failure'
+            }
+
             applicationsStatus[applicationName]['data'][serviceName]['data'].push({
+                'primaryCluster': partitionStatus.primaryCluster,
                 'primaryPartitionId': partitionStatus.primaryPartitionId,
+                'secondaryCluster': partitionStatus.secondaryCluster,
                 'secondaryPartitionId': partitionStatus.partitionId,
                 'lastBackupRestored': partitionStatus.lastBackupRestored,
                 'currentlyUnderRestore': partitionStatus.currentlyUnderRestore,
@@ -103,12 +110,21 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
                 'restoreState': partitionStatus.restoreState
             });
 
-            if (partitionsStatus.restoreState == 'Failure') {
+            if (partitionStatus.restoreState == 'Failure') {
                 applicationsStatus[applicationName]['data'][serviceName]['status'] = 'Failure';
                 applicationsStatus[applicationName]['status'] = 'Failure';
             }
         }
         $rootScope.applicationsServicesStatus = applicationsStatus;
+        $rootScope.applicationsServicesStatusKeys = Object.keys(applicationsStatus);
+
+        for (var i = 0; i < $rootScope.applicationsServicesStatusKeys.length; i++) {
+            var appName = $rootScope.applicationsServicesStatusKeys[i];
+            var servNames = Object.keys(applicationsStatus[appName]['data']);
+            applicationToServiceNames[appName] = servNames;
+        }
+
+        $rootScope.applicationToServiceNames = applicationToServiceNames;
     }
 
     var cancelNextLoad = function () {
@@ -382,10 +398,99 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
             });
     };
 
+    $scope.editPolicyOfApp = function (policyName) {
+        $rootScope.currentPolicyUnderEdit = policyName;
+        $rootScope.appPolicyEditFlag = true;
+        var index = $rootScope.storedPolicies.indexOf(policyName);
+        if (index > -1) {
+            $rootScope.storedPolicies.splice(index, 1);
+        }
+    }
+
+    $scope.saveEditPolicyOfApp = function () {
+        var policyName = $rootScope.currentPolicyUnderEdit;
+        var contentData = {};
+        var policyInd = -1;
+
+        for (var i = 0; i < $scope.apppolicies.length; i++) {
+            if ($scope.apppolicies[i].policy == policyName) {
+                policyInd = i;
+                break;
+            }
+        }
+
+        contentData.PoliciesList = [$scope.apppolicies[policyInd]];
+
+        var content = JSON.stringify(contentData);
+
+        var clusterEndp = $rootScope.primaryClusterEndpoint.replace(":19000", ":19080");
+
+        $http.post('api/RestoreService/updatepolicy/' + clusterEndp, content)
+            .then(function (data, status) {
+                $scope.getStoredPolicies();
+                $rootScope.appPolicyEditFlag = false;
+                runToast("Policy successfully edited", "success");
+            }, function (data, status) {
+                $rootScope.storedPolicies.push($rootScope.currentPolicyUnderEdit);
+                $rootScope.appPolicyEditFlag = false;
+                runToast("Policy could not be edited. Please try again", "alert");
+            });
+    }
+
+    $scope.cancelEditPolicyOfApp = function () {
+        $rootScope.storedPolicies.push($rootScope.currentPolicyUnderEdit);
+        $rootScope.appPolicyEditFlag = false;
+    }
+
+    $scope.editPolicyOfService = function (policyName) {
+        $rootScope.currentPolicyUnderEdit = policyName;
+        $rootScope.servicePolicyEditFlag = true;
+        var index = $rootScope.storedPolicies.indexOf(policyName);
+        if (index > -1) {
+            $rootScope.storedPolicies.splice(index, 1);
+        }
+    }
+
+    $scope.saveEditPolicyOfService = function () {
+        var policyName = $rootScope.currentPolicyUnderEdit;
+        var contentData = {};
+        var policyInd = -1;
+
+        for (var i = 0; i < $scope.policies.length; i++) {
+            if ($scope.policies[i].policy == policyName) {
+                policyInd = i;
+                break;
+            }
+        }
+
+        contentData.PoliciesList = [$scope.policies[policyInd]];
+
+        var content = JSON.stringify(contentData);
+
+        var clusterEndp = $rootScope.primaryClusterEndpoint.replace(":19000", ":19080");
+
+        $http.post('api/RestoreService/updatepolicy/' + clusterEndp, content)
+            .then(function (data, status) {
+                $scope.getStoredPolicies();
+                $rootScope.servicePolicyEditFlag = false;
+                runToast("Policy successfully edited", "success");
+            }, function (data, status) {
+                $rootScope.storedPolicies.push($rootScope.currentPolicyUnderEdit);
+                $rootScope.servicePolicyEditFlag = false;
+                runToast("Policy could not be edited. Please try again", "alert");
+            });
+    }
+
+    $scope.cancelEditPolicyOfService = function () {
+        $rootScope.storedPolicies.push($rootScope.currentPolicyUnderEdit);
+        $rootScope.servicePolicyEditFlag = false;
+    }
+
     $scope.openServicePolicyModal = function (serviceName, serviceStatus) {
         $scope.getStoredPolicies();
         $rootScope.currentServicename = serviceName;
         $rootScope.serviceDisableFlag = false;
+        $rootScope.servicePolicyEditFlag = false;
 
         if (serviceStatus == 'Configured') {
             $rootScope.serviceDisableFlag = true;
@@ -416,6 +521,7 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
     $scope.openAppPolicyModal = function (appName, appStatus) {
         $scope.getStoredPolicies();
         $rootScope.currentAppname = appName;
+        $rootScope.appPolicyEditFlag = false;
         $rootScope.appDisableFlag = false;
 
         if (appStatus == 'Configured') {

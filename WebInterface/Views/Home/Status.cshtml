@@ -1,7 +1,7 @@
 ﻿<div ng-controller="SFAppDRToolController" ng-init="refresh()">
     <div style="margin-top: 20px;">
 
-        <h1 class="text-center">SF Application Disaster Recovery Tool</h1>
+        <h1 class="text-center">Backup and Restore status of Service Fabric Applications</h1>
 
         <div>
             <h2 style="margin-right: 15px; display: inline !important; float: left;">Backup Status</h2>
@@ -113,24 +113,28 @@
             </tr>
         </tbody>
     </table> -->
-
+        <div style="clear: both;"></div>
         <div style="width: 100%">
-            <div ng-repeat="appName in Object.keys(applicationsServicesStatus)">
+            <h3>Applications: </h3>
+            <div ng-repeat="appName in applicationsServicesStatusKeys">
                 <div data-role="panel"
                      data-title-caption="<h4>{{appName}}</h4>"
                      data-collapsible="true"
                      ng-attr-data-cls-title="{{ applicationsServicesStatus[appName]['status'] == 'Failure' ? 'bg-red fg-white' : undefined }}">
 
-                    <div ng-repeat="serviceName in Object.keys(applicationsServicesStatus[appName]['data'])">
+                    <h4>Services: </h4>
+                    <div ng-repeat="serviceName in applicationToServiceNames[appName]">
                         <div data-role="panel"
                              data-title-caption="<h4>{{serviceName}}</h4>"
                              data-collapsible="true"
                              ng-attr-data-cls-title="{{ applicationsServicesStatus[appName]['data'][serviceName]['status'] == 'Failure' ? 'bg-red fg-white' : undefined }}">
 
-                            <table class="table table-striped row-hower">
+                            <table class="table">
                                 <thead>
                                     <tr>
+                                        <th class="sortable-column">Primary Cluster</th>
                                         <th class="sortable-column">Primary PartitionId</th>
+                                        <th class="sortable-column">Secondary Cluster</th>
                                         <th class="sortable-column">Secondary PartitionId</th>
                                         <th class="sortable-column">Last Backup Restored</th>
                                         <th class="sortable-column">Currently Under Restore</th>
@@ -141,8 +145,10 @@
                                 <tbody>
                                     <tr ng-repeat="partitionStatus in applicationsServicesStatus[appName]['data'][serviceName]['data']"
                                         ng-class="{'alert': partitionStatus.restoreState == 'Failure'}">
+                                        <td>{{partitionStatus.primaryCluster.address}}</td>
                                         <td>{{partitionStatus.primaryPartitionId}}</td>
-                                        <td>{{partitionStatus.partitionId}}</td>
+                                        <td>{{partitionStatus.secondaryCluster.address}}</td>
+                                        <td>{{partitionStatus.secondaryPartitionId}}</td>
                                         <td>{{partitionStatus.lastBackupRestored.backupTime}}({{partitionStatus.lastBackupRestored.backupId}})</td>
                                         <td>{{partitionStatus.currentlyUnderRestore.backupTime}}({{partitionStatus.currentlyUnderRestore.backupId}})</td>
                                         <td>{{partitionStatus.latestBackupAvailable.backupTime}}({{partitionStatus.latestBackupAvailable.backupId}})</td>

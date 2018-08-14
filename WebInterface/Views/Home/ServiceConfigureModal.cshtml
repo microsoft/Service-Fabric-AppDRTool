@@ -6,7 +6,7 @@
 
 <div ng-controller="SFAppDRToolController" ng-init= "refresh()">
     <div class="container" style="margin-top: 20px;">
-        <h1 class="text-center" style="margin-bottom: 10px;">SF Application Disaster Recovery Tool</h1>
+        <h1 class="text-center" style="margin-bottom: 10px;">Configure Service Fabric Applications for Disaster Recovery</h1>
         <div ng-if="splashLoad" style="margin: 0 auto; padding-top: 100px;" data-role="activity" data-type="ring" data-style="dark"></div>
         <h2 ng-if="!splashLoad">Applications</h2>
         <div ng-repeat="appName in appsKeys">
@@ -60,47 +60,53 @@
         </div>
 
         <div class="dialog" data-role="dialog" id="policyConfigModal">
-            <div class="dialog-title">Policy Configuration</div>
-            
+            <div class="dialog-title" ng-if="!servicePolicyEditFlag">Policy Configuration</div>
+            <div class="dialog-title" ng-if="servicePolicyEditFlag">Edit Policy</div>
             <div class="dialog-content">
+                <p ng-if="!serviceConfigLoad" style="margin-bottom: 10px;">Please enter the credentials for the following policies: </p>
                 <div ng-if="serviceConfigLoad" style="margin: 0 auto;" data-role="activity" data-type="ring" data-style="dark"></div>
-                <div ng-repeat="policy in policies">
-                    <div data-role="panel"
-                         data-title-caption="<h5>{{policy.policy}}</h5>"
-                         data-collapsible="true"
-                         data-collapsed="true"
-                         data-cls-title="bg-yellow fg-black"
-                         ng-if="!(storedPolicies.indexOf(policy.policy) >= 0)">
-                        <form>
-                            <div class="form-group" ng-if="policy.backupStorage.storageKind == 'AzureBlobStore'">
-                                <label>Connection String</label>
-                                <input type="text" placeholder="Connection String" ng-model="policy.backupStorage.connectionString" />
+                <div class="grid">
+                    <div ng-repeat="policy in policies" class="row">
+                        <div class="cell-12" ng-if="!(storedPolicies.indexOf(policy.policy) >= 0)">
+                            <div data-role="panel"
+                                 data-title-caption="<h5>{{policy.policy}}</h5>"
+                                 data-collapsible="true"
+                                 data-collapsed="true"
+                                 data-cls-title="bg-yellow fg-black">
+                                <form>
+                                    <div class="form-group" ng-if="policy.backupStorage.storageKind == 'AzureBlobStore'">
+                                        <label>Connection String</label>
+                                        <input type="text" placeholder="Connection String" ng-model="policy.backupStorage.connectionString" />
+                                    </div>
+                                    <div class="form-group" ng-if="policy.backupStorage.storageKind == 'FileShare'">
+                                        <label>Primary Username</label>
+                                        <input type="text" placeholder="Primary username" ng-model="policy.backupStorage.primaryUsername" />
+                                    </div>
+                                    <div class="form-group" ng-if="policy.backupStorage.storageKind == 'FileShare'">
+                                        <label>Primary Password</label>
+                                        <input type="password" placeholder="Primary password" ng-model="policy.backupStorage.primaryPassword" />
+                                    </div>
+                                    <div class="form-group" ng-if="policy.backupStorage.storageKind == 'FileShare'">
+                                        <label>Secondary Username</label>
+                                        <input type="text" placeholder="Secondary username" ng-model="policy.backupStorage.secondaryUsername" />
+                                    </div>
+                                    <div class="form-group" ng-if="policy.backupStorage.storageKind == 'FileShare'">
+                                        <label>Secondary Password</label>
+                                        <input type="password" placeholder="Secondary password" ng-model="policy.backupStorage.secondaryPassword" />
+                                    </div>
+                                </form>
                             </div>
-                            <div class="form-group" ng-if="policy.backupStorage.storageKind == 'FileShare'">
-                                <label>Primary Username</label>
-                                <input type="text" placeholder="Primary username" ng-model="policy.backupStorage.primaryUsername" />
+                        </div>
+                        <div class="cell-10" ng-if="storedPolicies.indexOf(policy.policy) >= 0">
+                            <div data-role="panel"
+                                 data-title-caption="<h5>{{policy.policy}}</h5>"
+                                 data-collapsible="true"
+                                 data-collapsed="true"
+                                 data-cls-title="bg-green fg-white">
+                                Policy details exist.
                             </div>
-                            <div class="form-group" ng-if="policy.backupStorage.storageKind == 'FileShare'">
-                                <label>Primary Password</label>
-                                <input type="password" placeholder="Primary password" ng-model="policy.backupStorage.primaryPassword" />
-                            </div>
-                            <div class="form-group" ng-if="policy.backupStorage.storageKind == 'FileShare'">
-                                <label>Secondary Username</label>
-                                <input type="text" placeholder="Secondary username" ng-model="policy.backupStorage.secondaryUsername" />
-                            </div>
-                            <div class="form-group" ng-if="policy.backupStorage.storageKind == 'FileShare'">
-                                <label>Secondary Password</label>
-                                <input type="password" placeholder="Secondary password" ng-model="policy.backupStorage.secondaryPassword" />
-                            </div>
-                        </form>
-                    </div>
-                    <div data-role="panel"
-                         data-title-caption="<h5>{{policy.policy}}</h5>"
-                         data-collapsible="true"
-                         data-collapsed="true"
-                         data-cls-title="bg-green fg-white"
-                         ng-if="storedPolicies.indexOf(policy.policy) >= 0">
-                        Policy details exist.
+                        </div>
+                        <div ng-if="storedPolicies.indexOf(policy.policy) >= 0" class="cell-1 pull-right" style="width: 12%; height: 2.625rem;"><button style="height: 2.625rem;" class="button primary rounded" ng-click="editPolicyOfService(policy.policy)"><span class="mif-pencil"></span></button></div>
                     </div>
                 </div>
                 <div ng-if="serviceNoPolicyFoundFlag">
@@ -108,65 +114,74 @@
                 </div>
             </div>
             <div class="dialog-actions">
-                <button class="button js-dialog-close">Back</button>
-                <button class="button primary" ng-if="!serviceConfigLoad && !serviceNoPolicyFoundFlag" ng-click="editPoliciesOfService()">Edit Policies</button>
-                <button class="button alert js-dialog-close" ng-if="!serviceConfigLoad && !serviceNoPolicyFoundFlag && serviceDisableFlag" ng-click="disconfigureService()">Disable</button>
-                <button class="button success js-dialog-close" ng-if="!serviceConfigLoad && !serviceNoPolicyFoundFlag && !serviceDisableFlag" ng-click="configureService()">Configure</button>
+                <button class="button js-dialog-close" ng-if="!servicePolicyEditFlag">Back</button>
+                <button class="button alert js-dialog-close" ng-if="!serviceConfigLoad && !serviceNoPolicyFoundFlag && serviceDisableFlag && !servicePolicyEditFlag" ng-click="disconfigureService()">Disable</button>
+                <button class="button success js-dialog-close" ng-if="!serviceConfigLoad && !serviceNoPolicyFoundFlag && !serviceDisableFlag && !servicePolicyEditFlag" ng-click="configureService()">Configure</button>
+                <button class="button alert js-dialog-close" ng-if="servicePolicyEditFlag" ng-click="cancelEditPolicyOfService()">Cancel</button>
+                <button class="button success js-dialog-close" ng-if="servicePolicyEditFlag" ng-click="saveEditPolicyOfService()">Save</button>
             </div>
         </div>
 
         <div class="dialog" data-role="dialog" id="appPolicyConfigModal">
-            <div class="dialog-title">Policy Configuration</div>
+            <div class="dialog-title" ng-if="!appPolicyEditFlag">Policy Configuration</div>
+            <div class="dialog-title" ng-if="appPolicyEditFlag">Edit Policy</div>
             <div class="dialog-content">
+                <p ng-if="!appConfigLoad" style="margin-bottom: 10px;">Please enter the credentials for the following policies: </p>
                 <div ng-if="appConfigLoad" style="margin: 0 auto;" data-role="activity" data-type="ring" data-style="dark"></div>
-                <div ng-repeat="policy in apppolicies">
-                    <div data-role="panel"
-                         data-title-caption="<h5>{{policy.policy}}</h5>"
-                         data-collapsible="true"
-                         data-collapsed="true"
-                         data-cls-title="bg-yellow fg-black"
-                         ng-if="!(storedPolicies.indexOf(policy.policy) >= 0)">
-                        <form>
-                            <div class="form-group" ng-if="policy.backupStorage.storageKind == 'AzureBlobStore'">
-                                <label>Connection String</label>
-                                <input type="text" placeholder="Connection String" ng-model="policy.backupStorage.connectionString" />
+                <div class="grid">
+                    <div ng-repeat="policy in apppolicies" class="row">
+                        <div class="cell-12" ng-if="!(storedPolicies.indexOf(policy.policy) >= 0)">
+                            <div data-role="panel"
+                                 data-title-caption="<h5>{{policy.policy}}</h5>"
+                                 data-collapsible="true"
+                                 data-collapsed="true"
+                                 data-cls-title="bg-yellow fg-black">
+                                <form>
+                                    <div class="form-group" ng-if="policy.backupStorage.storageKind == 'AzureBlobStore'">
+                                        <label>Connection String</label>
+                                        <input type="text" placeholder="Connection String" ng-model="policy.backupStorage.connectionString" />
+                                    </div>
+                                    <div class="form-group" ng-if="policy.backupStorage.storageKind == 'FileShare'">
+                                        <label>Primary Username</label>
+                                        <input type="text" placeholder="Primary username" ng-model="policy.backupStorage.primaryUsername" />
+                                    </div>
+                                    <div class="form-group" ng-if="policy.backupStorage.storageKind == 'FileShare'">
+                                        <label>Primary Password</label>
+                                        <input type="password" placeholder="Primary password" ng-model="policy.backupStorage.primaryPassword" />
+                                    </div>
+                                    <div class="form-group" ng-if="policy.backupStorage.storageKind == 'FileShare'">
+                                        <label>Secondary Username</label>
+                                        <input type="text" placeholder="Secondary username" ng-model="policy.backupStorage.secondaryUsername" />
+                                    </div>
+                                    <div class="form-group" ng-if="policy.backupStorage.storageKind == 'FileShare'">
+                                        <label>Secondary Password</label>
+                                        <input type="password" placeholder="Secondary password" ng-model="policy.backupStorage.secondaryPassword" />
+                                    </div>
+                                </form>
                             </div>
-                            <div class="form-group" ng-if="policy.backupStorage.storageKind == 'FileShare'">
-                                <label>Primary Username</label>
-                                <input type="text" placeholder="Primary username" ng-model="policy.backupStorage.primaryUsername" />
+                        </div>
+                        <div class="cell-10" ng-if="storedPolicies.indexOf(policy.policy) >= 0">
+                            <div data-role="panel"
+                                 data-title-caption="<h5>{{policy.policy}}</h5>"
+                                 data-collapsible="true"
+                                 data-collapsed="true"
+                                 data-cls-title="bg-green fg-white">
+                                Policy details exist.
                             </div>
-                            <div class="form-group" ng-if="policy.backupStorage.storageKind == 'FileShare'">
-                                <label>Primary Password</label>
-                                <input type="password" placeholder="Primary password" ng-model="policy.backupStorage.primaryPassword" />
-                            </div>
-                            <div class="form-group" ng-if="policy.backupStorage.storageKind == 'FileShare'">
-                                <label>Secondary Username</label>
-                                <input type="text" placeholder="Secondary username" ng-model="policy.backupStorage.secondaryUsername" />
-                            </div>
-                            <div class="form-group" ng-if="policy.backupStorage.storageKind == 'FileShare'">
-                                <label>Secondary Password</label>
-                                <input type="password" placeholder="Secondary password" ng-model="policy.backupStorage.secondaryPassword" />
-                            </div>
-                        </form>
+                        </div>
+                        <div ng-if="storedPolicies.indexOf(policy.policy) >= 0" class="cell-1 pull-right" style="width: 12%; height: 2.625rem;"><button style="height: 2.625rem;" class="button primary rounded" ng-click="editPolicyOfApp(policy.policy)"><span class="mif-pencil"></span></button></div>
                     </div>
-                    <div data-role="panel"
-                         data-title-caption="<h5>{{policy.policy}}</h5>"
-                         data-collapsible="true"
-                         data-collapsed="true"
-                         data-cls-title="bg-green fg-white"
-                         ng-if="storedPolicies.indexOf(policy.policy) >= 0">
-                        Policy details exist.
-                    </div>
-                </div>
+                 </div>
                 <div ng-if="appNoPolicyFoundFlag">
                     Could not find any associated policies. Please try again or ensure application has policies configured.
                 </div>
             </div>
             <div class="dialog-actions">
-                <button class="button js-dialog-close">Back</button>
-                <button class="button primary" ng-if="!appConfigLoad && !appNoPolicyFoundFlag" ng-click="editPoliciesOfApplication()">Edit Policies</button>
-                <button class="button alert js-dialog-close" ng-if="!appConfigLoad && !appNoPolicyFoundFlag && appDisableFlag" ng-click="disconfigureApplication()">Disable</button>
-                <button class="button success js-dialog-close" ng-if="!appConfigLoad && !appNoPolicyFoundFlag && !appDisableFlag" ng-click="configureApplication()">Configure</button>
+                <button class="button js-dialog-close" ng-if="!appPolicyEditFlag">Back</button>
+                <button class="button alert js-dialog-close" ng-if="!appConfigLoad && !appNoPolicyFoundFlag && appDisableFlag && !appPolicyEditFlag" ng-click="disconfigureApplication()">Disable</button>
+                <button class="button success js-dialog-close" ng-if="!appConfigLoad && !appNoPolicyFoundFlag && !appDisableFlag && !appPolicyEditFlag" ng-click="configureApplication()">Configure</button>
+                <button class="button alert js-dialog-close" ng-if="appPolicyEditFlag" ng-click="cancelEditPolicyOfApp()">Cancel</button>
+                <button class="button success js-dialog-close" ng-if="appPolicyEditFlag" ng-click="saveEditPolicyOfApp()">Save</button>
             </div>
         </div>
 

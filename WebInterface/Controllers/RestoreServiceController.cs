@@ -580,6 +580,26 @@ namespace WebInterface.Controllers
             }
         }
 
+        [HttpPost]
+        [Route("updatepolicy/{primaryClusterAddress}")]
+        public void UpdatePolicy([FromBody]JObject content, string primaryClusterAddress)
+        {
+            JArray policiesData = (JArray)content["PoliciesList"];
+            List<PolicyStorageEntity> policicesList = JsonConvert.DeserializeObject<List<PolicyStorageEntity>>(policiesData.ToString());
+
+            IPolicyStorageService policyStorageClient = ServiceProxy.Create<IPolicyStorageService>(new Uri("fabric:/SFAppDRTool/PolicyStorageService"));
+
+            try
+            {
+                policyStorageClient.PostStorageDetails(policicesList, primaryClusterAddress);
+            }
+            catch (Exception ex)
+            {
+                ServiceEventSource.Current.Message("Web Service: Exception updating the stored polices {0}", ex);
+                throw;
+            }
+        }
+
 
         /// <summary>
         /// Disconfigures the application for standby by calling disconfigure of the restore service method

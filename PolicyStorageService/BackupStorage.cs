@@ -42,6 +42,48 @@ namespace PolicyStorageService
 
         }
 
+        public BackupStorage DeepCopy()
+        {
+            BackupStorage newBackupStorage = (BackupStorage) this.MemberwiseClone();
+            if (connectionString != null)
+            {
+                newBackupStorage.connectionString = String.Copy(connectionString);
+            }
+            if (containerName != null)
+            {
+                newBackupStorage.containerName = String.Copy(containerName);
+            }
+            if (friendlyname != null)
+            {
+                newBackupStorage.friendlyname = String.Copy(friendlyname);
+            }
+            if (path != null)
+            {
+                newBackupStorage.path = String.Copy(path);
+            }
+            if (primaryPassword != null)
+            {
+                newBackupStorage.primaryPassword = String.Copy(primaryPassword);
+            }
+            if (primaryUsername != null)
+            {
+                newBackupStorage.primaryUsername = String.Copy(primaryUsername);
+            }
+            if (secondaryPassword != null)
+            {
+                newBackupStorage.secondaryPassword = String.Copy(secondaryPassword);
+            }
+            if (secondaryUsername != null)
+            {
+                newBackupStorage.secondaryUsername = String.Copy(secondaryUsername);
+            }
+            if (StorageKind != null)
+            {
+                newBackupStorage.StorageKind = String.Copy(StorageKind);
+            }
+            return newBackupStorage;
+        }
+
         public void Encrypt()
         {
             if (connectionString != null)

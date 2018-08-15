@@ -117,8 +117,9 @@ namespace PolicyStorageService
                 if (backupStorage.HasValue)
                 {
                     BackupStorage bstorage = backupStorage.Value;
-                    bstorage.Decrypt();
-                    return bstorage;
+                    BackupStorage exportableBstorage = bstorage.DeepCopy();
+                    exportableBstorage.Decrypt();
+                    return exportableBstorage;
                 }
                 else
                 {

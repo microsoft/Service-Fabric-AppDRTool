@@ -200,7 +200,10 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
 
         var content = JSON.stringify(contentData);
 
-        $http.post('api/RestoreService/disconfigureapp/', content)
+        var primaryClusterName = $rootScope.primaryClusterEndpoint.split(':')[0];
+        var secondaryClusterName = $rootScope.secondaryClusterEndpoint.split(':')[0];
+
+        $http.post('api/RestoreService/disconfigureapp/' + primaryClusterName + '/' + secondaryClusterName, content)
             .then(function (data, status) {
                 // Disconfigure successful
                 $scope.appsStatusData[applicationName] = "NotConfigured";
@@ -264,7 +267,10 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
 
         var content = JSON.stringify(contentData);
 
-        $http.post('api/RestoreService/disconfigureservice/', content)
+        var primaryClusterName = $rootScope.primaryClusterEndpoint.split(':')[0];
+        var secondaryClusterName = $rootScope.secondaryClusterEndpoint.split(':')[0];
+
+        $http.post('api/RestoreService/disconfigureservice/' + primaryClusterName + '/' + secondaryClusterName, content)
             .then(function (data, status) {
                 // Disconfigure successful
                 for (var i = 0; i < $scope.appsData[$rootScope.appNameServ].length; i++) {

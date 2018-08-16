@@ -72,7 +72,7 @@ namespace WebInterface.Controllers
             FabricClient.QueryClient queryClient = primaryfc.QueryManager;
             ApplicationList appsList = await queryClient.GetApplicationListAsync();
 
-            HashSet<String> configuredApplications = await GetConfiguredApplications();
+            HashSet<String> configuredApplications = await GetConfiguredApplications(primarycs, secondarycs);
             HashSet<String> configuredServices = await GetConfiguredServices();
             HashSet<String> secServices = new HashSet<string>();
 
@@ -464,43 +464,6 @@ namespace WebInterface.Controllers
             return true;
         }
 
-        // Calls configure method of restore service
-        [HttpPost]
-        [Route("configure/{primaryClusterAddress}/{secondaryClusterAddress}/{primaryHttpEndpoint}/{secondaryHttpEndpoint}")]
-        public void Configure([FromBody]JObject content, string primaryClusterAddress,string secondaryClusterAddress, string primaryHttpEndpoint, string secondaryHttpEndpoint)
-        {
-            string primaryClientConnectionEndpoint = GetClientConnectionEndpoint(primaryClusterAddress + ":" + primaryHttpEndpoint);
-            string secondaryClientConnectionEndpoint = GetClientConnectionEndpoint(secondaryClusterAddress + ":" + secondaryHttpEndpoint);
-
-            ClusterDetails primaryCluster = new ClusterDetails(primaryClusterAddress, primaryHttpEndpoint, primaryClientConnectionEndpoint);
-            ClusterDetails secondaryCluster = new ClusterDetails(secondaryClusterAddress, secondaryHttpEndpoint, secondaryClientConnectionEndpoint);
-
-            JArray applicationsData = (JArray)content["ApplicationsList"];
-            JArray policiesData = (JArray)content["PoliciesList"];
-
-            List<string> applicationsList = JsonConvert.DeserializeObject<List<string>>(applicationsData.ToString());
-            List<PolicyStorageEntity> policicesList = JsonConvert.DeserializeObject<List<PolicyStorageEntity>>(policiesData.ToString());
-
-            FabricClient fabricClient = new FabricClient();
-            ServicePartitionList partitionList = fabricClient.QueryManager.GetPartitionListAsync(new Uri("fabric:/SFAppDRTool/RestoreService")).Result;
-
-            foreach(Partition partition in partitionList)
-            {
-                var int64PartitionInfo = partition.PartitionInformation as Int64RangePartitionInformation;
-                long lowKey = (long)int64PartitionInfo?.LowKey;
-                IRestoreService restoreServiceClient = ServiceProxy.Create<IRestoreService>(new Uri("fabric:/SFAppDRTool/RestoreService"), new ServicePartitionKey(lowKey));
-                try
-                {
-                    restoreServiceClient.Configure(applicationsList, policicesList, primaryCluster, secondaryCluster);
-                }
-                catch (Exception ex)
-                {
-                    ServiceEventSource.Current.Message("Web Service: Exception configuring the application {0}", ex);
-                    throw;
-                }
-            }
-        }
-
         [HttpPost]
         [Route("configureapp/{primaryClusterAddress}/{primaryThumbprint}/{primaryCommonName}/{secondaryClusterAddress}/{secondaryThumbprint}/{secondaryCommonName}")]
         public void ConfigureApplication([FromBody]JObject content, string primaryClusterAddress, string primaryThumbprint, string primaryCommonName, string secondaryClusterAddress, string secondaryThumbprint, string secondaryCommonName)
@@ -607,8 +570,8 @@ namespace WebInterface.Controllers
         /// <param name="applicationName"></param>
         /// <returns></returns>
         [HttpPost]
-        [Route("disconfigureapp")]
-        public async Task<string> DisconfigureApplication([FromBody]JObject content)
+        [Route("disconfigureapp/{primaryCluster}/{secondaryCluster}")]
+        public async Task<string> DisconfigureApplication([FromBody]JObject content, String primaryCluster, String secondaryCluster)
         {
             bool successfullyRemoved = true;
 
@@ -624,7 +587,7 @@ namespace WebInterface.Controllers
                 IRestoreService restoreServiceClient = ServiceProxy.Create<IRestoreService>(new Uri("fabric:/SFAppDRTool/RestoreService"), new ServicePartitionKey(lowKey));
                 try
                 {
-                    string applicationRemoved = await restoreServiceClient.DisconfigureApplication(applicationDataObj[0]);
+                    string applicationRemoved = await restoreServiceClient.DisconfigureApplication(applicationDataObj[0], primaryCluster, secondaryCluster);
                     if(applicationRemoved == null) successfullyRemoved = false;
                 }
                 catch (Exception ex)
@@ -638,8 +601,8 @@ namespace WebInterface.Controllers
         }
 
         [HttpPost]
-        [Route("disconfigureservice")]
-        public async Task<string> DisconfigureService([FromBody]JObject content)
+        [Route("disconfigureservice/{primaryCluster}/{secondaryCluster}")]
+        public async Task<string> DisconfigureService([FromBody]JObject content, String primaryCluster, String secondaryCluster)
         {
             bool successfullyRemoved = true;
 
@@ -655,7 +618,7 @@ namespace WebInterface.Controllers
                 IRestoreService restoreServiceClient = ServiceProxy.Create<IRestoreService>(new Uri("fabric:/SFAppDRTool/RestoreService"), new ServicePartitionKey(lowKey));
                 try
                 {
-                    string serviceRemoved = await restoreServiceClient.DisconfigureService(serviceDataObj[0]);
+                    string serviceRemoved = await restoreServiceClient.DisconfigureService(serviceDataObj[0], primaryCluster, secondaryCluster);
                     if (serviceRemoved == null) successfullyRemoved = false;
                 }
                 catch (Exception ex)
@@ -735,7 +698,7 @@ namespace WebInterface.Controllers
             return configuredServices;
         }
 
-        public async Task<HashSet<String>> GetConfiguredApplications()
+        public async Task<HashSet<String>> GetConfiguredApplications(String primarycs, String secondarycs)
         {
             FabricClient fabricClient = new FabricClient();
             ServicePartitionList partitionList = fabricClient.QueryManager.GetPartitionListAsync(new Uri("fabric:/SFAppDRTool/RestoreService")).Result;
@@ -750,7 +713,7 @@ namespace WebInterface.Controllers
                 IRestoreService restoreServiceClient = ServiceProxy.Create<IRestoreService>(new Uri("fabric:/SFAppDRTool/RestoreService"), new ServicePartitionKey(lowKey));
                 try
                 {
-                    configAppNames = await restoreServiceClient.GetConfiguredApplicationNames();
+                    configAppNames = await restoreServiceClient.GetConfiguredApplicationNames(primarycs, secondarycs);
                     configuredApplicationNames.AddRange(configAppNames);
                 }
                 catch (Exception ex)

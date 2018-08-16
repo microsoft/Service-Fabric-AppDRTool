@@ -58,5 +58,27 @@ namespace RestoreService
                 return (T)formatter.Deserialize(ms);
             }
         }
+
+        public static String getPartitionAccessKey(Guid partitionId, String primaryClusterName, String secondaryClusterName)
+        {
+            return getPrimarySecondaryClusterJoin(primaryClusterName, secondaryClusterName) + "~" + partitionId.ToString();
+        }
+
+        public static bool isPartitionFromPrimarySecondaryCombination(String partitionAccessKey, String primaryClusterName, String secondaryClusterName)
+        {
+            string[] parts = partitionAccessKey.Split('~');
+            String psc = getPrimarySecondaryClusterJoin(primaryClusterName, secondaryClusterName);
+            return psc.Equals(parts[0]);
+        }
+
+        public static String getPrimarySecondaryClusterJoin(String primaryClusterName, String secondaryClusterName)
+        {
+            return primaryClusterName + ":" + secondaryClusterName;
+        }
+
+        public static String getClusterNameFromTCPEndpoint(String clusterEndpoint)
+        {
+            return clusterEndpoint.Split(':')[0];
+        }
     }
 }

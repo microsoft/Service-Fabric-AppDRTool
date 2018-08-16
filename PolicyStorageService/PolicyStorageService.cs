@@ -61,7 +61,7 @@ namespace PolicyStorageService
         /// <param name="policies"></param>
         /// <param name="primaryClusterConnectionString"></param>
         /// <returns></returns>
-        public async Task<bool> PostStorageDetails(List<PolicyStorageEntity> policies, string primaryClusterConnectionString)
+        public async Task<bool> PostStorageDetails(List<PolicyStorageEntity> policies, string primaryClusterConnectionString, string clusterThumbprint)
         {
             IReliableDictionary<string, BackupStorage> myDictionary = await this.StateManager.GetOrAddAsync<IReliableDictionary<string, BackupStorage>>("storageDictionary");
             foreach (var entity in policies)
@@ -69,7 +69,7 @@ namespace PolicyStorageService
                 BackupStorage backupStorage;
                 try
                 {
-                    backupStorage = await GetStorageInfo(entity.policy, primaryClusterConnectionString);
+                    backupStorage = await GetStorageInfo(entity.policy, primaryClusterConnectionString, clusterThumbprint);
                 }
                 catch (Exception ex) {
                     ServiceEventSource.Current.Message("Policy Storage Service: Exception getting storage info {0}", ex);
@@ -147,13 +147,13 @@ namespace PolicyStorageService
             return allBackupStoragePolicies;
         }
 
-        public async Task<BackupStorage> GetStorageInfo(string policy, string primaryClusterConnectionString)
+        public async Task<BackupStorage> GetStorageInfo(string policy, string primaryClusterConnectionString, string clusterThumbprint)
         {
             string URL = "https://" + primaryClusterConnectionString + "/";
             string urlParameters = "BackupRestore/BackupPolicies/" + policy + "?api-version=6.2-preview";
 
 
-            X509Certificate2 clientCert = GetClientCertificate();
+            X509Certificate2 clientCert = GetClientCertificate(clusterThumbprint);
             WebRequestHandler requestHandler = new WebRequestHandler();
             requestHandler.ClientCertificates.Add(clientCert);
             requestHandler.ServerCertificateValidationCallback = this.MyRemoteCertificateValidationCallback;
@@ -183,14 +183,14 @@ namespace PolicyStorageService
             }
         }
 
-        static X509Certificate2 GetClientCertificate()
+        static X509Certificate2 GetClientCertificate(string Thumbprint)
         {
             X509Store userCaStore = new X509Store(StoreName.My, StoreLocation.CurrentUser);
             try
             {
                 userCaStore.Open(OpenFlags.ReadOnly);
                 X509Certificate2Collection certificatesInStore = userCaStore.Certificates;
-                X509Certificate2Collection findResult = certificatesInStore.Find(X509FindType.FindByThumbprint, "45E894C34014B198B157F95A57EF98BD7D051194", false);
+                X509Certificate2Collection findResult = certificatesInStore.Find(X509FindType.FindByThumbprint, Thumbprint, false);
                 X509Certificate2 clientCertificate = null;
 
                 if (findResult.Count == 1)

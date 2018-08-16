@@ -544,8 +544,8 @@ namespace WebInterface.Controllers
         }
 
         [HttpPost]
-        [Route("updatepolicy/{primaryClusterAddress}")]
-        public void UpdatePolicy([FromBody]JObject content, string primaryClusterAddress)
+        [Route("updatepolicy/{primaryClusterAddress}/{primaryClusterThumbprint}")]
+        public void UpdatePolicy([FromBody]JObject content, string primaryClusterAddress, string primaryClusterThumbprint)
         {
             JArray policiesData = (JArray)content["PoliciesList"];
             List<PolicyStorageEntity> policicesList = JsonConvert.DeserializeObject<List<PolicyStorageEntity>>(policiesData.ToString());
@@ -554,7 +554,7 @@ namespace WebInterface.Controllers
 
             try
             {
-                policyStorageClient.PostStorageDetails(policicesList, primaryClusterAddress);
+                policyStorageClient.PostStorageDetails(policicesList, primaryClusterAddress, primaryClusterThumbprint);
             }
             catch (Exception ex)
             {

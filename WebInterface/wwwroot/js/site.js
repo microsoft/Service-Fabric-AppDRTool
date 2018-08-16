@@ -89,8 +89,6 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
             .then(function (data, status) {
                 $scope.clusterCombinations = data.data;
                 $rootScope.clusterCombinations = $scope.clusterCombinations;
-                console.log("Calling from clustercombinations");
-                console.log($scope.clusterCombinations);
             }, function (data, status) {
                 runToast("Could not load saved cluster combinations. Please try refreshing the page.", "alert");
             });
@@ -580,6 +578,10 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
         $rootScope.primaryClusterEndpoint = $scope.primaryClusterEndpoint;
         $rootScope.secondaryClusterEndpoint = $scope.secondaryClusterEndpoint;
         
+        $scope.appsKeys = undefined;
+        $scope.appsData = undefined;
+        $rootScope.appsKeys = undefined;
+        $rootScope.appsData = undefined;
 
         var primaryAddress = $scope.primaryClusterEndpoint;
 
@@ -642,6 +644,7 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
         $scope.getStoredPolicies();
 
     };
+
 
     $scope.getAppsOnSelectedCluster = function (clusterCombination) {
         var primaryCluster = clusterCombination.item1;

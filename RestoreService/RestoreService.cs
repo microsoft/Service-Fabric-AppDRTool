@@ -213,7 +213,7 @@ namespace RestoreService
         public async Task ConfigureApplication(string application, List<PolicyStorageEntity> policyDetails, ClusterDetails primaryCluster, ClusterDetails secondaryCluster)
         {
             IPolicyStorageService policyStorageClient = ServiceProxy.Create<IPolicyStorageService>(new Uri("fabric:/SFAppDRTool/PolicyStorageService"));
-            bool stored = policyStorageClient.PostStorageDetails(policyDetails, primaryCluster.address + ':' + primaryCluster.httpEndpoint).GetAwaiter().GetResult();
+            bool stored = policyStorageClient.PostStorageDetails(policyDetails, primaryCluster.address + ':' + primaryCluster.httpEndpoint, primaryCluster.certificateThumbprint).GetAwaiter().GetResult();
             await MapPartitionsOfApplication(new Uri(application), primaryCluster, secondaryCluster, "partitionDictionary");
             IReliableDictionary<String, List<String>> configuredApplicationsDictionary = await this.StateManager.GetOrAddAsync<IReliableDictionary<String, List<String>>>("configuredApplicationsDictionary");
             using (var tx = this.StateManager.CreateTransaction())
@@ -296,7 +296,7 @@ namespace RestoreService
         public async Task ConfigureService(String applicationName, String serviceName, List<PolicyStorageEntity> policyDetails, ClusterDetails primaryCluster, ClusterDetails secondaryCluster)
         {
             IPolicyStorageService policyStorageClient = ServiceProxy.Create<IPolicyStorageService>(new Uri("fabric:/SFAppDRTool/PolicyStorageService"));
-            bool stored = await policyStorageClient.PostStorageDetails(policyDetails, primaryCluster.address + ':' + primaryCluster.httpEndpoint);
+            bool stored = await policyStorageClient.PostStorageDetails(policyDetails, primaryCluster.address + ':' + primaryCluster.httpEndpoint, primaryCluster.certificateThumbprint);
             await MapPartitionsOfService(new Uri(applicationName), new Uri(serviceName), primaryCluster, secondaryCluster, "partitionDictionary");
         }
 

@@ -9,7 +9,7 @@ namespace PolicyStorageService
 {
     public interface IPolicyStorageService : IService
     {
-        Task<bool> PostStorageDetails(List<PolicyStorageEntity> policies, string primaryClusterConnectionString);
+        Task<bool> PostStorageDetails(List<PolicyStorageEntity> policies, string primaryClusterConnectionString, string clusterThumbprint);
 
         Task<BackupStorage> GetPolicyStorageDetails(String policy);
 

@@ -112,10 +112,6 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
             applicationsStatus[applicationName]['data'][serviceName]['data'] = applicationsStatus[applicationName]['data'][serviceName]['data'] || [];
             applicationsStatus[applicationName]['data'][serviceName]['status'] = applicationsStatus[applicationName]['data'][serviceName]['status'] || '';
 
-            if (i == 1) {
-                partitionStatus.restoreState = 'Failure'
-            }
-
             applicationsStatus[applicationName]['data'][serviceName]['data'].push({
                 'primaryCluster': partitionStatus.primaryCluster,
                 'primaryPartitionId': partitionStatus.primaryPartitionId,

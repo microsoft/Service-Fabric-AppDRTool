@@ -263,6 +263,36 @@ namespace RestoreService
             return configuredApplicationNames;
         }
 
+        public async Task<List<Tuple<ClusterDetails, ClusterDetails>>> GetClusterCombinations()
+        {
+            HashSet<String> primarySecondarySet = new HashSet<String>();
+            List<Tuple<ClusterDetails, ClusterDetails>> clusterCombinations = new List<Tuple<ClusterDetails, ClusterDetails>>();
+
+            IReliableDictionary<String, PartitionWrapper> partitionDictionary = await this.StateManager.GetOrAddAsync<IReliableDictionary<String, PartitionWrapper>>("partitionDictionary");
+            using (ITransaction tx = this.StateManager.CreateTransaction())
+            {
+                IAsyncEnumerable<KeyValuePair<String, PartitionWrapper>> enumerable = await partitionDictionary.CreateEnumerableAsync(tx);
+                IAsyncEnumerator<KeyValuePair<String, PartitionWrapper>> asyncEnumerator = enumerable.GetAsyncEnumerator();
+                while (await asyncEnumerator.MoveNextAsync(CancellationToken.None))
+                {
+                    String primarySecondaryJoinKey = asyncEnumerator.Current.Key;
+                    PartitionWrapper partitionInfo = asyncEnumerator.Current.Value;
+
+                    String primarySecondary = Utility.getPrimarySecondary(primarySecondaryJoinKey);
+
+                    if (!primarySecondarySet.Contains(primarySecondary))
+                    {
+                        Tuple<ClusterDetails, ClusterDetails> clusterTuple = Tuple.Create(partitionInfo.primaryCluster, partitionInfo.secondaryCluster);
+                        clusterCombinations.Add(clusterTuple);
+                        primarySecondarySet.Add(primarySecondary);
+                    }
+                }
+                await tx.CommitAsync();
+            }
+
+            return clusterCombinations;
+        }
+
         public async Task ConfigureService(String applicationName, String serviceName, List<PolicyStorageEntity> policyDetails, ClusterDetails primaryCluster, ClusterDetails secondaryCluster)
         {
             IPolicyStorageService policyStorageClient = ServiceProxy.Create<IPolicyStorageService>(new Uri("fabric:/SFAppDRTool/PolicyStorageService"));

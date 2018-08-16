@@ -23,6 +23,8 @@ namespace RestoreService
 
         Task<string> DisconfigureService(string serviceName, string primaryCluster, string secondaryCluster);
 
+        Task<List<Tuple<ClusterDetails, ClusterDetails>>> GetClusterCombinations();
+
         Task<List<PartitionWrapper>> GetStatus();
 
     }

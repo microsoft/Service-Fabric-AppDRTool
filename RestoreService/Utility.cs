@@ -71,6 +71,11 @@ namespace RestoreService
             return psc.Equals(parts[0]);
         }
 
+        public static String getPrimarySecondary(String partitionAccessKey)
+        {
+            return partitionAccessKey.Split('~')[0];
+        }
+
         public static String getPrimarySecondaryClusterJoin(String primaryClusterName, String secondaryClusterName)
         {
             return primaryClusterName + ":" + secondaryClusterName;

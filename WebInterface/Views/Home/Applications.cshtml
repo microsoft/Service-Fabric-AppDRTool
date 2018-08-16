@@ -2,10 +2,22 @@
 @{
     ViewData["Title"] = "Applications";
 }
-<div ng-controller="SFAppDRToolController" ng-init= "refresh()">
+<div ng-controller="SFAppDRToolController" ng-init= "initClusterDetails()">
     <div class="container" style="margin-top: 20px;">
 
         <h1 class="text-center">Connect to Service Fabric Clusters</h1>
+
+        <div ng-if="clusterCombinations.length > 0">
+            <div data-role="panel"
+                 data-title-caption="<h4>Configured Clusters</h4>"
+                 data-collapsible="true">
+                <div ng-repeat="clusterCombination in clusterCombinations">
+                    <button class="button success rounded large" style="width : 100%;" ng-click="getAppsOnSelectedCluster(clusterCombination)">{{clusterCombination.item1.address}} –– {{clusterCombination.item2.address}}</button>
+                </div>
+            </div>
+
+            <h2 class="text-center">Connect to new clusters:</h2>
+        </div>
 
         <form>
             <div style="margin-top: 70px;">

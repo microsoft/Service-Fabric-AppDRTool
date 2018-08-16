@@ -35,13 +35,14 @@ app.config(function ($routeProvider) {
 
 app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$timeout', '$location','$uibModal', function ($rootScope, $scope, $http, $timeout, $location, $uibModal) {
 
-    var loadTime = 10000, //Load the data every second
+    var loadTime = 10000, //Load the data every 2 seconds
         errorCount = 0, //Counter for the server errors
         loadPromise; //Pointer to the promise created by the Angular $timout service
 
 
     // This will be called whenever the page is refreshed
     $scope.refresh = function () {
+        $rootScope.statusLoadingFlag = true;
         $http.get('api/RestoreService/status')
             .then(function (data, status) {
                 $rootScope.partitionsStatus = data.data;
@@ -73,12 +74,28 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
                     $rootScope.showConfiguredApps = false;
 
                 errorCount = 0;
+                $rootScope.statusLoadingFlag = false;
                 nextLoad();     //Calls the next load
 
             }, function (data, status) {
+                $rootScope.statusLoadingFlag = false;
                 nextLoad(++errorCount * 2 * loadTime);   // If current request fails next load will be delayed
             });
     };
+
+    $scope.initClusterDetails = function () {
+
+        $http.get('api/RestoreService/clustercombinations')
+            .then(function (data, status) {
+                $scope.clusterCombinations = data.data;
+                $rootScope.clusterCombinations = $scope.clusterCombinations;
+                console.log("Calling from clustercombinations");
+                console.log($scope.clusterCombinations);
+            }, function (data, status) {
+                runToast("Could not load saved cluster combinations. Please try refreshing the page.", "alert");
+            });
+        $scope.refresh();
+    }
 
     $scope.transformPartitionsStatus = function () {
         var partitionsStatus = $rootScope.partitionsStatus;
@@ -629,6 +646,18 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
         $scope.getStoredPolicies();
 
     };
+
+    $scope.getAppsOnSelectedCluster = function (clusterCombination) {
+        var primaryCluster = clusterCombination.item1;
+        var secondaryCluster = clusterCombination.item2;
+        $scope.primaryClusterEndpoint = primaryCluster.address + ':' + primaryCluster.clientConnectionEndpoint;
+        $scope.secondaryClusterEndpoint = secondaryCluster.address + ':' + secondaryCluster.clientConnectionEndpoint;
+        $scope.primSecureThumbp = primaryCluster.certificateThumbprint;
+        $scope.secSecureThumbp = secondaryCluster.certificateThumbprint;
+        $scope.primaryCommonName = primaryCluster.commonName;
+        $scope.secondaryCommonName = secondaryCluster.commonName;
+        $scope.getAppsOnPrimaryCluster();
+    }
 
     $scope.getStoredPolicies = function () {
         $http.get('api/RestoreService/storedpolicies')

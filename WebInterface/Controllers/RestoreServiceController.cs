@@ -667,6 +667,36 @@ namespace WebInterface.Controllers
             return mappedPartitions;
         }
 
+        [HttpGet]
+        [Route("clustercombinations")]
+        public async Task<IEnumerable<Tuple<ClusterDetails, ClusterDetails>>> GetClusterCombinations()
+        {
+            FabricClient fabricClient = new FabricClient();
+            ServicePartitionList partitionList = fabricClient.QueryManager.GetPartitionListAsync(new Uri("fabric:/SFAppDRTool/RestoreService")).Result;
+
+            List<Tuple<ClusterDetails, ClusterDetails>> allClusterCombinations = new List<Tuple<ClusterDetails, ClusterDetails>>();
+
+            foreach (Partition partition in partitionList)
+            {
+                List<Tuple<ClusterDetails, ClusterDetails>> localClusterCombinations = new List<Tuple<ClusterDetails, ClusterDetails>>();
+                var int64PartitionInfo = partition.PartitionInformation as Int64RangePartitionInformation;
+                long lowKey = (long)int64PartitionInfo?.LowKey;
+                IRestoreService restoreServiceClient = ServiceProxy.Create<IRestoreService>(new Uri("fabric:/SFAppDRTool/RestoreService"), new ServicePartitionKey(lowKey));
+                try
+                {
+                    localClusterCombinations = await restoreServiceClient.GetClusterCombinations();
+                    allClusterCombinations.AddRange(localClusterCombinations);
+                }
+                catch (Exception ex)
+                {
+                    ServiceEventSource.Current.Message("Web Service: Exception getting cluster combinations {0}", ex);
+                    throw;
+                }
+            }
+
+            return allClusterCombinations;
+        }
+
         public async Task<List<String>> GetStoredPolicies()
         {
             FabricClient fabricClient = new FabricClient();

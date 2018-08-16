@@ -13,6 +13,8 @@ This application has 3 components:
 ## Getting Started
 Clone this repo and build and deploy this application. Then after the application had started, open webbrowser and go to (localhost:8787) where you can see the application landing page.
 
+Ensure you have enabled backups on your Service Fabric Clusters. To run this application you also need have the Service Fabric Runtime installed.
+
 ## Contributing
 
 This project welcomes contributions and suggestions.  Most contributions require you to agree to a

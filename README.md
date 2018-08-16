@@ -8,12 +8,12 @@ This application has 3 components:
  - Restore Service (stateful) : Stores partition mappings and triggers restore periodically
  - PolicyStorage Service (stateful) : Stores storage details per policy 
  
- PolicyStorage credentials are encrypted. The key can be set at `PolicyStorageEncryptionKey` in `Cloud.xml` for cloud deployements and similarly in Local1Node.xml / Local5Node.xml for local deployments. 
+ PolicyStorage credentials are encrypted. The key can be set at `PolicyStorageEncryptionKey` in `ApplicationParameters/Cloud.xml` for cloud deployements and similarly in `Local1Node.xml` / `Local5Node.xml` for local deployments. 
 
-## How to use
+## Getting Started
 Clone this repo and build and deploy this application. Then after the application had started, open webbrowser and go to (localhost:8787) where you can see the application landing page.
 
-# Contributing
+## Contributing
 
 This project welcomes contributions and suggestions.  Most contributions require you to agree to a
 Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us

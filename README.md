@@ -3,13 +3,15 @@
 The Service Fabric Application Disaster Recovery Tool makes the application in secondary cluster data ready by periodically restoring latest backups available from primary cluster.
 
 ## Components
-This application has 3 components :
- - WebInterface (stateless frontend service)
+This application has 3 components:
+ - WebInterface (stateless) : The web front-end service
  - Restore Service (stateful) : Stores partition mappings and triggers restore periodically
  - PolicyStorage Service (stateful) : Stores storage details per policy 
+ 
+ PolicyStorage credentials are encrypted. The key can be set at `PolicyStorageEncryptionKey` in `Cloud.xml` for cloud deployements and similarly in Local1Node.xml / Local5Node.xml for local deployments. 
 
 ## How to use
-Clone this repo and build and deploy this application. Then after the application had started, open webbrowser and goto (localhost:8787) where you can see the application landing page.
+Clone this repo and build and deploy this application. Then after the application had started, open webbrowser and go to (localhost:8787) where you can see the application landing page.
 
 # Contributing
 

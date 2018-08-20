@@ -33,7 +33,12 @@ app.config(function ($routeProvider) {
         .otherwise({ redirectTo: '/' });
 });
 
-app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$timeout', '$location','$uibModal', function ($rootScope, $scope, $http, $timeout, $location, $uibModal) {
+
+app.run(['$templateCache', function ($templateCache) {
+    $templateCache.removeAll();
+}]);
+
+app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$timeout', '$location', '$window', '$route', '$uibModal', function ($rootScope, $scope, $http, $timeout, $location, $window, $route, $uibModal) {
 
     var loadTime = 10000, //Load the data every 2 seconds
         errorCount = 0, //Counter for the server errors
@@ -296,126 +301,14 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
             });
     }
 
-   
-    $scope.cancel = function (modalInstance) {
-        if (modalInstance === 'configureModalInstance')
-            $scope.configureModalInstance.dismiss();
-
-        else if (modalInstance === 'policyModalInstance')
-            $scope.policyModalInstance.dismiss();
-
-        else if (modalInstance === 'statusModalInstance')
-            $scope.statusModalInstance.dismiss();
-
-        else {
-            $scope.configureModalInstance.dismiss();
-            $scope.policyModalInstance.dismiss();
-        }
-    };
 
     $scope.status = {
     isFirstOpen: true,
     isFirstDisabled: false
     };
 
-    $scope.openStatusModal = function (configuredApp) {
-        $scope.configuredApp = configuredApp;
-        $scope.applicationStatus = [];
-        for (var i in $rootScope.partitionsStatus) {
-            if ($scope.partitionsStatus[i].applicationName.includes(configuredApp)) {
-                $scope.applicationStatus.push($rootScope.partitionsStatus[i]);
-            }
-        }
-        $scope.statusModalInstance = $uibModal.open({
-            templateUrl: 'StatusModal',
-            scope: $scope,
-            windowClass: 'app-modal-window'
-        });
-    };
-
-    $scope.disconfigure = function (configuredApp) {
-        if (configuredApp.includes("fabric:/"))
-            configuredApp = configuredApp.replace('fabric:/', '');
-        $http.get('api/RestoreService/disconfigure/' + configuredApp)
-            .then(function (data, status) {
-                if (data.data == configuredApp)
-                    window.alert("Suuccessfully disconfigured");
-                $scope.cancel('statusModalInstance');
-            }, function (data, status) {
-                window.alert("Problem while disconfiguring");
-            });
-    }
-
-    $scope.toggleSelection = function (app) {
-        var idx = $rootScope.selectedApps.indexOf(app);
-
-        // Is currently selected
-        if (idx > -1) {
-            $rootScope.selectedApps.splice(idx, 1);
-        }
-
-        // Is newly selected
-        else {
-            $rootScope.selectedApps.push(app);
-        }
-    };
-
-    $scope.getapps = function () {
-
-        $rootScope.pc = $scope.pc;
-        $rootScope.sc = $scope.sc;
-        $rootScope.php = $scope.php;
-        $rootScope.shp = $scope.shp;
-
-        var primaryAddress = $scope.pc;
-
-        if (primaryAddress.includes("http://"))
-            primaryAddress = primaryAddress.replace("http://", "");
-
-        if (primaryAddress.includes("https://"))
-            primaryAddress = primaryAddress.replace("https://", "");
-
-        $scope.pc = $rootScope.pc = primaryAddress;
-
-        var secondaryAddress = $scope.sc;
-
-        if (secondaryAddress.includes("http://"))
-            secondaryAddress = secondaryAddress.replace("http://", "");
-
-        if (secondaryAddress.includes("https://"))
-            secondaryAddress = secondaryAddress.replace("https://", "");
-
-        $scope.sc = $rootScope.sc = secondaryAddress;
-
-        $http.get('api/RestoreService/' + $scope.pc + '/' + $scope.php)
-            .then(function (data, status) {
-                $scope.apps = data;
-                $scope.configureModalInstance = $uibModal.open({
-                    templateUrl: 'ConfigureModal',
-                    scope: $scope,
-                    windowClass: 'app--window'
-                });
-            }, function (data, status) {
-                $scope.apps = undefined;
-                window.alert('Please check the cluster details and try again');
-            });
-    };
-
-    $scope.openPolicyModal = function () {
-        $http.post('api/RestoreService/policies/' + $scope.pc + ':' + $scope.php, $rootScope.selectedApps)
-            .then(function (data, status) {
-                $scope.policies = data.data;
-                console.log($scope.policies[0].backupStorage.primaryUsername);
-                $scope.policyModalInstance = $uibModal.open({
-                    templateUrl: 'PolicyModal',
-                    scope: $scope
-                });
-            }, function (data, status) {
-                $scope.policies = undefined;
-            });
-    };
-
     $scope.editPolicyOfApp = function (policyName) {
+        console.log("In editPolicyOfApp");
         $rootScope.currentPolicyUnderEdit = policyName;
         $rootScope.appPolicyEditFlag = true;
         var index = $rootScope.storedPolicies.indexOf(policyName);
@@ -425,6 +318,7 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
     }
 
     $scope.saveEditPolicyOfApp = function () {
+        console.log("In saveEditPolicyOfApp");
         var policyName = $rootScope.currentPolicyUnderEdit;
         var contentData = {};
         var policyInd = -1;
@@ -522,6 +416,7 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
         $rootScope.serviceConfigLoad = true;
         $rootScope.serviceNoPolicyFoundFlag = false;
         $scope.policies = undefined;
+        $rootScope.policies = undefined;
         $http.get('api/RestoreService/servicepolicies/' + clusterEndp + '/' + serviceN)
             .then(function (data, status) {
                 $scope.policies = data.data;
@@ -535,8 +430,34 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
             });
     }
 
+    $scope.openAppPolicyModalWrapper = function (appName, appStatus) {
+        $scope.storedPolicies = undefined;
+        $rootScope.storedPolicies = undefined;
+        $http.get('api/RestoreService/storedpolicies')
+            .then(function (data, status) {
+                $scope.storedPolicies = data.data;
+                $rootScope.storedPolicies = $scope.storedPolicies;
+                console.log("Stored policies are..");
+                console.log($rootScope.storedPolicies);
+
+                $scope.openAppPolicyModal(appName, appStatus);
+
+            }, function (data, status) {
+                $scope.storedPolicies = undefined;
+                runToast('Could not load all stored policies. Please try again.', 'alert');
+            });
+    }
+
     $scope.openAppPolicyModal = function (appName, appStatus) {
         $scope.getStoredPolicies();
+        console.log("Inside openAppPolicyModal..");
+        console.log("openAppPolicyModal storedPolicies are");
+        console.log($rootScope.storedPolicies);
+        console.log("end openAppPolicyModal");
+        
+        $scope.apppolicies = undefined;
+        $rootScope.apppolicies = undefined;
+
         $rootScope.currentAppname = appName;
         $rootScope.appPolicyEditFlag = false;
         $rootScope.appDisableFlag = false;
@@ -551,13 +472,16 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
         $rootScope.appConfigLoad = true;
         $rootScope.appNoPolicyFoundFlag = false;
         $scope.apppolicies = undefined;
+        $rootScope.apppolicies = undefined;
         $http.get('api/RestoreService/apppolicies/' + clusterEndp + '/' + appNameN)
             .then(function (data, status) {
+                console.log("In function openAppPolicyModal");
                 $scope.apppolicies = data.data;
                 console.log($scope.apppolicies);
                 $rootScope.apppolicies = $scope.apppolicies;
                 $rootScope.appConfigLoad = false;
             }, function (data, status) {
+                runToast("Could not load application policies. Please try again.");
                 $scope.apppolicies = undefined;
                 $rootScope.appConfigLoad = false;
                 $rootScope.appNoPolicyFoundFlag = true;
@@ -570,7 +494,12 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
     }
 
     $scope.gotoindex = function () {
-        $location.path("/");
+        $location.path("/&rt=" + Math.random());
+    }
+
+    $scope.gotoconfigure = function () {
+        $window.location.href = '#!Configure';
+        $window.location.reload();
     }
 
     $scope.getAppsOnPrimaryCluster = function () {
@@ -580,6 +509,12 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
         
         $scope.appsKeys = undefined;
         $scope.appsData = undefined;
+        $scope.policies = undefined;
+        $scope.apppolicies = undefined;
+        $rootScope.policies = undefined;
+        $rootScope.apppolicies = undefined;
+        $scope.storedPolicies = undefined;
+        $rootScope.storedPolicies = undefined;
         $rootScope.appsKeys = undefined;
         $rootScope.appsData = undefined;
 
@@ -611,7 +546,7 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
         $rootScope.secondaryClusterCommonName = $scope.secondaryCommonName;
 
 
-        $location.path("/servConfig");
+        $location.path("/servConfig").search('rt', Math.random());
         $rootScope.splashLoad = true;
 
         $http.get('api/RestoreService/apps/' + $scope.primaryClusterEndpoint + '/' + $scope.primSecureThumbp + '/' + $scope.primaryCommonName + '/' + $scope.secondaryClusterEndpoint + '/' + $scope.secSecureThumbp + '/' + $scope.secondaryCommonName)
@@ -635,15 +570,31 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
                 console.log($scope.appsStatusData);
                 console.log($scope.appsData);
                 console.log($scope.appsKeys);
+                $scope.getStoredPolicies();
             }, function (data, status) {
                 $scope.apps = undefined;
                 $rootScope.splashLoad = false;
                 runToast('Please check the cluster details and try again', 'alert');
             });
 
-        $scope.getStoredPolicies();
+        
 
     };
+
+    $scope.updateHTTPEndpoint = function (cluster) {
+        if (cluster == 'primary') {
+            var tcpe = $scope.primaryClusterEndpoint;
+            var httpe = tcpe.replace(":19000", ":19080");
+            httpe = "https://" + httpe;
+            $scope.primaryClusterHTTPEndpoint = httpe;
+        }
+        else {
+            var tcpe = $scope.secondaryClusterEndpoint;
+            var httpe = tcpe.replace(":19000", ":19080");
+            httpe = "https://" + httpe;
+            $scope.secondaryClusterHTTPEndpoint = httpe;
+        }
+    }
 
 
     $scope.getAppsOnSelectedCluster = function (clusterCombination) {
@@ -656,9 +607,12 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
         $scope.primaryCommonName = primaryCluster.commonName;
         $scope.secondaryCommonName = secondaryCluster.commonName;
         $scope.getAppsOnPrimaryCluster();
+        //angular.element('#clusterConfigButton').triggerHandler('click');
     }
 
     $scope.getStoredPolicies = function () {
+        $scope.storedPolicies = undefined;
+        $rootScope.storedPolicies = undefined;
         $http.get('api/RestoreService/storedpolicies')
             .then(function (data, status) {
                 $scope.storedPolicies = data.data;

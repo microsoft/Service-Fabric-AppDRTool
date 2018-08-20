@@ -28,38 +28,6 @@ namespace WebInterface.Controllers
     public class RestoreServiceController : Controller
     {
 
-        // Returns the applications deployed in primary cluster
-        // GET: api/RestoreService/{primaryCluster}/{httpendpoint}
-        [HttpGet("{pc}/{hp}", Name = "Get")]
-        public async Task<IActionResult> Get(String pc, String hp)
-        {
-            List<String> applicationsList = new List<String>();
-
-            FabricClient fabricClient;
-
-            try
-            {
-                fabricClient = new FabricClient(pc + ":" + GetClientConnectionEndpoint(pc + ":" + hp));
-            }
-            catch (Exception e)
-            {
-                ServiceEventSource.Current.Message("Web Service: Exception while trying to connect securely: {0}", e);
-                throw;
-            }
-
-
-            FabricClient.QueryClient queryClient = fabricClient.QueryManager;
-            ApplicationList appsList = await queryClient.GetApplicationListAsync();
-
-            foreach (Application application in appsList)
-            {
-                string applicationName = application.ApplicationName.ToString();
-                applicationsList.Add(applicationName);
-            }
-            return this.Json(applicationsList);
-
-        }
-
         [HttpGet]
         [Route("apps/{primarycs}/{primaryThumbprint}/{primarycname}/{secondarycs}/{secondaryThumbprint}/{secondarycname}")]
         public async Task<IActionResult> GetApplications(String primarycs, String primaryThumbprint, String primarycname, String secondarycs, String secondaryThumbprint, String secondarycname)
@@ -197,14 +165,14 @@ namespace WebInterface.Controllers
             return xc;
         }
 
-        static X509Certificate2 GetClientCertificate()
+        static X509Certificate2 GetClientCertificate(String Thumbprint)
         {
             X509Store userCaStore = new X509Store(StoreName.My, StoreLocation.CurrentUser);
             try
             {
                 userCaStore.Open(OpenFlags.ReadOnly);
                 X509Certificate2Collection certificatesInStore = userCaStore.Certificates;
-                X509Certificate2Collection findResult = certificatesInStore.Find(X509FindType.FindByThumbprint, "45E894C34014B198B157F95A57EF98BD7D051194", false);
+                X509Certificate2Collection findResult = certificatesInStore.Find(X509FindType.FindByThumbprint, Thumbprint, false);
                 X509Certificate2 clientCertificate = null;
 
                 if (findResult.Count == 1)
@@ -228,63 +196,7 @@ namespace WebInterface.Controllers
         }
 
 
-
-        // Gets the policies associated with the chosen applications
-        [Route("policies/{cs}")]
-        [HttpPost]
-        public async Task<IActionResult> GetPolicies(String cs, [FromBody]List<string> applications)
-        {
-            List<PolicyStorageEntity> policyDetails = new List<PolicyStorageEntity>();
-            List<string> policyNames = new List<string>();
-            foreach (string application in applications)
-            {
-                string URL = "http://" + cs + "/Applications/" + application + "/$/GetBackupConfigurationInfo";
-                string urlParameters = "?api-version=6.2-preview";
-                HttpClient client = new HttpClient
-                {
-                    BaseAddress = new Uri(URL)
-                };
-                client.DefaultRequestHeaders.Accept.Add(
-                new MediaTypeWithQualityHeaderValue("application/json"));
-
-                HttpResponseMessage response = await client.GetAsync(urlParameters);
-                if (response.IsSuccessStatusCode)
-                {
-                    var content = response.Content.ReadAsAsync<JObject>().Result;
-                    JArray array = (JArray)content["Items"];
-                    foreach (var item in array)
-                    {
-                        string policy = item["PolicyName"].ToString();
-                        if (!policyNames.Contains(policy))
-                            policyNames.Add(policy);
-                    }
-                }
-                else
-                {
-                    Console.WriteLine("{0} ({1})", (int)response.StatusCode, response.ReasonPhrase);
-                    return null;
-                }
-
-                foreach(string policyName in policyNames)
-                {
-                    PolicyStorageEntity policyStorageEntity = await getPolicyDetails(cs, policyName);
-
-                    if (policyStorageEntity != null)
-                    {
-                        policyDetails.Add(policyStorageEntity);
-                    }
-                    else
-                    {
-                        //Console.WriteLine("{0} ({1})", (int)response.StatusCode, response.ReasonPhrase);
-                        return null;
-                    }
-                }
-            }
-            return this.Json(policyDetails);
-            
-        }
-
-        private async Task<PolicyStorageEntity> getPolicyDetails(string cs, string policyName)
+        private async Task<PolicyStorageEntity> getPolicyDetails(string cs, string thumbprint, string policyName)
         {
             PolicyStorageEntity policyStorageEntity = new PolicyStorageEntity();
             policyStorageEntity.policy = policyName;
@@ -292,7 +204,7 @@ namespace WebInterface.Controllers
             string urlParameters = "BackupRestore/BackupPolicies/" + policyName + "?api-version=6.2-preview";
 
 
-            X509Certificate2 clientCert = GetClientCertificate();
+            X509Certificate2 clientCert = GetClientCertificate(thumbprint);
             WebRequestHandler requestHandler = new WebRequestHandler();
             requestHandler.ClientCertificates.Add(clientCert);
             requestHandler.ServerCertificateValidationCallback = this.MyRemoteCertificateValidationCallback;
@@ -323,9 +235,9 @@ namespace WebInterface.Controllers
             }
         }
 
-        [Route("servicepolicies/{cs}/{serviceName}")]
+        [Route("servicepolicies/{cs}/{thumbprint}/{serviceName}")]
         [HttpGet]
-        public async Task<IActionResult> GetServicePolicies(String cs, String serviceName)
+        public async Task<IActionResult> GetServicePolicies(String cs, String thumbprint, String serviceName)
         {
             List<PolicyStorageEntity> policyDetails = new List<PolicyStorageEntity>();
             List<string> policyNames = new List<string>();
@@ -335,7 +247,7 @@ namespace WebInterface.Controllers
             string urlParameters = "Services/" + mServiceName + "/$/GetBackupConfigurationInfo" + "?api-version=6.2-preview";
 
 
-            X509Certificate2 clientCert = GetClientCertificate();
+            X509Certificate2 clientCert = GetClientCertificate(thumbprint);
             WebRequestHandler requestHandler = new WebRequestHandler();
             requestHandler.ClientCertificates.Add(clientCert);
             requestHandler.ServerCertificateValidationCallback = this.MyRemoteCertificateValidationCallback;
@@ -376,7 +288,7 @@ namespace WebInterface.Controllers
 
             foreach (string policyName in policyNames)
             {
-                PolicyStorageEntity policyStorageEntity = await this.getPolicyDetails(cs, policyName);
+                PolicyStorageEntity policyStorageEntity = await this.getPolicyDetails(cs, thumbprint, policyName);
 
                 if (policyStorageEntity != null)
                 {
@@ -392,9 +304,9 @@ namespace WebInterface.Controllers
 
         }
 
-        [Route("apppolicies/{cs}/{appName}")]
+        [Route("apppolicies/{cs}/{thumbprint}/{appName}")]
         [HttpGet]
-        public async Task<IActionResult> GetApplicationPolicies(String cs, String appName)
+        public async Task<IActionResult> GetApplicationPolicies(String cs, String thumbprint, String appName)
         {
             List<PolicyStorageEntity> policyDetails = new List<PolicyStorageEntity>();
             List<string> policyNames = new List<string>();
@@ -403,7 +315,7 @@ namespace WebInterface.Controllers
             string urlParameters = "Applications/" + appName + "/$/GetBackupConfigurationInfo" + "?api-version=6.2-preview";
 
 
-            X509Certificate2 clientCert = GetClientCertificate();
+            X509Certificate2 clientCert = GetClientCertificate(thumbprint);
             WebRequestHandler requestHandler = new WebRequestHandler();
             requestHandler.ClientCertificates.Add(clientCert);
             requestHandler.ServerCertificateValidationCallback = this.MyRemoteCertificateValidationCallback;
@@ -444,7 +356,7 @@ namespace WebInterface.Controllers
 
             foreach (string policyName in policyNames)
             {
-                PolicyStorageEntity policyStorageEntity = await this.getPolicyDetails(cs, policyName);
+                PolicyStorageEntity policyStorageEntity = await this.getPolicyDetails(cs, thumbprint, policyName);
 
                 if (policyStorageEntity != null)
                 {

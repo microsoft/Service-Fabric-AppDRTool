@@ -411,13 +411,14 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
         serviceN = serviceN.replace("/", "_");
         console.log("The service name is " + serviceN);
         clusterEndp = $rootScope.primaryClusterEndpoint.replace(":19000", ":19080");
+        clusterThumbprint = $rootScope.primaryClusterThumbprint;
         console.log("The cluster name is " + clusterEndp);
         Metro.dialog.open('#policyConfigModal');
         $rootScope.serviceConfigLoad = true;
         $rootScope.serviceNoPolicyFoundFlag = false;
         $scope.policies = undefined;
         $rootScope.policies = undefined;
-        $http.get('api/RestoreService/servicepolicies/' + clusterEndp + '/' + serviceN)
+        $http.get('api/RestoreService/servicepolicies/' + clusterEndp + '/' + clusterThumbprint + '/' + serviceN)
             .then(function (data, status) {
                 $scope.policies = data.data;
                 console.log($scope.policies);
@@ -468,12 +469,13 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
 
         appNameN = appName.replace("fabric:/", "");
         clusterEndp = $rootScope.primaryClusterEndpoint.replace(":19000", ":19080");
+        clusterThumbprint = $rootScope.primaryClusterThumbprint;
         Metro.dialog.open('#appPolicyConfigModal');
         $rootScope.appConfigLoad = true;
         $rootScope.appNoPolicyFoundFlag = false;
         $scope.apppolicies = undefined;
         $rootScope.apppolicies = undefined;
-        $http.get('api/RestoreService/apppolicies/' + clusterEndp + '/' + appNameN)
+        $http.get('api/RestoreService/apppolicies/' + clusterEndp + '/' + clusterThumbprint + '/' + appNameN)
             .then(function (data, status) {
                 console.log("In function openAppPolicyModal");
                 $scope.apppolicies = data.data;

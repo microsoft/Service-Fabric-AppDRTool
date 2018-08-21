@@ -192,7 +192,8 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
         console.log(contentData);
         var content = JSON.stringify(contentData);
 
-        $http.post('api/RestoreService/configureapp/' + $rootScope.primaryClusterEndpoint + '/' + $rootScope.primaryClusterThumbprint + '/' + $rootScope.primaryClusterCommonName + '/' + $rootScope.secondaryClusterEndpoint + '/' + $rootScope.secondaryClusterThumbprint + '/' + $rootScope.secondaryClusterCommonName, content)
+        $http.post('api/RestoreService/configureapp/' + $rootScope.primaryClusterEndpoint + '/' + $rootScope.primaryClusterHTTPEndpoint.replace("//", "__") + '/' + $rootScope.primaryClusterThumbprint + '/' + $rootScope.primaryClusterCommonName + '/'
+            + $rootScope.secondaryClusterEndpoint + '/' + $rootScope.secondaryClusterHTTPEndpoint.replace("//", "__") + '/' + $rootScope.secondaryClusterThumbprint + '/' + $rootScope.secondaryClusterCommonName, content)
             .then(function (data, status) {
                 console.log("Calling success function");
                 console.log($scope.appsData);
@@ -256,7 +257,8 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
         console.log(contentData);
         var content = JSON.stringify(contentData);
 
-        $http.post('api/RestoreService/configureservice/' + $rootScope.primaryClusterEndpoint + '/' + $rootScope.primaryClusterThumbprint + '/' + $rootScope.primaryClusterCommonName + '/' + $rootScope.secondaryClusterEndpoint + '/' + $rootScope.secondaryClusterThumbprint + '/' + $rootScope.secondaryClusterCommonName, content)
+        $http.post('api/RestoreService/configureservice/' + $rootScope.primaryClusterEndpoint + '/' + $rootScope.primaryClusterHTTPEndpoint.replace("//", "__") + '/' + $rootScope.primaryClusterThumbprint + '/' + $rootScope.primaryClusterCommonName + '/'
+            + $rootScope.secondaryClusterEndpoint.replace("//", "__") + '/' + $rootScope.secondaryClusterHTTPEndpoint.replace("//", "__") + '/' + $rootScope.secondaryClusterThumbprint + '/' + $rootScope.secondaryClusterCommonName, content)
             .then(function (data, status) {
                 for (var i = 0; i < $scope.appsData[$rootScope.appNameServ].length; i++) {
                     if ($scope.appsData[$rootScope.appNameServ][i][0] == $rootScope.currentServicename) {
@@ -334,9 +336,10 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
 
         var content = JSON.stringify(contentData);
 
-        var clusterEndp = $rootScope.primaryClusterEndpoint.replace(":19000", ":19080");
+        var clusterEndp = $rootScope.primaryClusterHTTPEndpoint;
+        clusterEndp = clusterEndp.replace("//", "__");
 
-        $http.post('api/RestoreService/updatepolicy/' + clusterEndp, content)
+        $http.post('api/RestoreService/updatepolicy/' + clusterEndp + '/' + $rootScope.primaryClusterThumbprint, content)
             .then(function (data, status) {
                 $scope.getStoredPolicies();
                 $rootScope.appPolicyEditFlag = false;
@@ -378,9 +381,10 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
 
         var content = JSON.stringify(contentData);
 
-        var clusterEndp = $rootScope.primaryClusterEndpoint.replace(":19000", ":19080");
+        var clusterEndp = $rootScope.primaryClusterHTTPEndpoint;
+        clusterEndp = clusterEndp.replace("//", "__");
 
-        $http.post('api/RestoreService/updatepolicy/' + clusterEndp, content)
+        $http.post('api/RestoreService/updatepolicy/' + clusterEndp + '/' + $rootScope.primaryClusterThumbprint, content)
             .then(function (data, status) {
                 $scope.getStoredPolicies();
                 $rootScope.servicePolicyEditFlag = false;
@@ -410,7 +414,8 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
         serviceN = serviceName.replace("fabric:/", "");
         serviceN = serviceN.replace("/", "_");
         console.log("The service name is " + serviceN);
-        clusterEndp = $rootScope.primaryClusterEndpoint.replace(":19000", ":19080");
+        clusterEndp = $rootScope.primaryClusterHTTPEndpoint;
+        clusterEndp = clusterEndp.replace("//", "__");
         clusterThumbprint = $rootScope.primaryClusterThumbprint;
         console.log("The cluster name is " + clusterEndp);
         Metro.dialog.open('#policyConfigModal');
@@ -455,9 +460,6 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
         console.log("openAppPolicyModal storedPolicies are");
         console.log($rootScope.storedPolicies);
         console.log("end openAppPolicyModal");
-        
-        $scope.apppolicies = undefined;
-        $rootScope.apppolicies = undefined;
 
         $rootScope.currentAppname = appName;
         $rootScope.appPolicyEditFlag = false;
@@ -468,7 +470,8 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
         }
 
         appNameN = appName.replace("fabric:/", "");
-        clusterEndp = $rootScope.primaryClusterEndpoint.replace(":19000", ":19080");
+        clusterEndp = $rootScope.primaryClusterHTTPEndpoint;
+        clusterEndp = clusterEndp.replace("//", "__");
         clusterThumbprint = $rootScope.primaryClusterThumbprint;
         Metro.dialog.open('#appPolicyConfigModal');
         $rootScope.appConfigLoad = true;
@@ -505,9 +508,6 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
     }
 
     $scope.getAppsOnPrimaryCluster = function () {
-
-        $rootScope.primaryClusterEndpoint = $scope.primaryClusterEndpoint;
-        $rootScope.secondaryClusterEndpoint = $scope.secondaryClusterEndpoint;
         
         $scope.appsKeys = undefined;
         $scope.appsData = undefined;
@@ -520,26 +520,12 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
         $rootScope.appsKeys = undefined;
         $rootScope.appsData = undefined;
 
-        var primaryAddress = $scope.primaryClusterEndpoint;
 
-        if (primaryAddress.includes("http://"))
-            primaryAddress = primaryAddress.replace("http://", "");
+        $rootScope.primaryClusterEndpoint = $scope.primaryClusterEndpoint;
+        $rootScope.secondaryClusterEndpoint = $scope.secondaryClusterEndpoint;
 
-        if (primaryAddress.includes("https://"))
-            primaryAddress = primaryAddress.replace("https://", "");
-
-        $scope.primaryClusterEndpoint = $rootScope.primaryClusterEndpoint = primaryAddress;
-
-        var secondaryAddress = $scope.secondaryClusterEndpoint;
-
-        if (secondaryAddress.includes("http://"))
-            secondaryAddress = secondaryAddress.replace("http://", "");
-
-        if (secondaryAddress.includes("https://"))
-            secondaryAddress = secondaryAddress.replace("https://", "");
-
-        $scope.secondaryClusterEndpoint = $rootScope.secondaryClusterEndpoint = secondaryAddress;
-
+        $rootScope.primaryClusterHTTPEndpoint = $scope.primaryClusterHTTPEndpoint;
+        $rootScope.secondaryClusterHTTPEndpoint = $scope.secondaryClusterHTTPEndpoint;
 
         $rootScope.primaryClusterThumbprint = $scope.primSecureThumbp;
         $rootScope.secondaryClusterThumbprint = $scope.secSecureThumbp;
@@ -586,13 +572,31 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
     $scope.updateHTTPEndpoint = function (cluster) {
         if (cluster == 'primary') {
             var tcpe = $scope.primaryClusterEndpoint;
-            var httpe = tcpe.replace(":19000", ":19080");
+            var tcparr = tcpe.split(':');
+            var tcpPort;
+            if (tcparr.length == 1) {
+                tcpPort = "19000"
+            }
+            else {
+                tcpPort = tcparr[1]; // should usually be 19000
+            }
+
+            var httpe = tcpe.replace(tcpPort, "19080");
             httpe = "https://" + httpe;
             $scope.primaryClusterHTTPEndpoint = httpe;
         }
         else {
             var tcpe = $scope.secondaryClusterEndpoint;
-            var httpe = tcpe.replace(":19000", ":19080");
+            var tcparr = tcpe.split(':');
+            var tcpPort;
+            if (tcparr.length == 1) {
+                tcpPort = "19000"
+            }
+            else {
+                tcpPort = tcparr[1]; // should usually be 19000
+            }
+            
+            var httpe = tcpe.replace(tcpPort, "19080");
             httpe = "https://" + httpe;
             $scope.secondaryClusterHTTPEndpoint = httpe;
         }
@@ -602,8 +606,10 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
     $scope.getAppsOnSelectedCluster = function (clusterCombination) {
         var primaryCluster = clusterCombination.item1;
         var secondaryCluster = clusterCombination.item2;
-        $scope.primaryClusterEndpoint = primaryCluster.address + ':' + primaryCluster.clientConnectionEndpoint;
-        $scope.secondaryClusterEndpoint = secondaryCluster.address + ':' + secondaryCluster.clientConnectionEndpoint;
+        $scope.primaryClusterEndpoint = primaryCluster.clientConnectionEndpoint;
+        $scope.primaryClusterHTTPEndpoint = primaryCluster.httpEndpoint;
+        $scope.secondaryClusterEndpoint = secondaryCluster.clientConnectionEndpoint;
+        $scope.secondaryClusterHTTPEndpoint = secondaryCluster.httpEndpoint;
         $scope.primSecureThumbp = primaryCluster.certificateThumbprint;
         $scope.secSecureThumbp = secondaryCluster.certificateThumbprint;
         $scope.primaryCommonName = primaryCluster.commonName;
@@ -625,33 +631,6 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
                 $scope.storedPolicies = undefined;
                 runToast('Could not load all stored policies. Please try again.', 'alert');
             });
-    }
-
-
-
-    $scope.getAppsSecure = function () {
-        $rootScope.primaryClusterEndpoint = $scope.primaryClusterEndpoint;
-        $rootScope.secondaryClusterEndpoint = $scope.secondaryClusterEndpoint;
-
-        var primaryAddress = $scope.primaryClusterEndpoint;
-
-        if (primaryAddress.includes("http://"))
-            primaryAddress = primaryAddress.replace("http://", "");
-
-        if (primaryAddress.includes("https://"))
-            primaryAddress = primaryAddress.replace("https://", "");
-
-        $scope.primaryClusterEndpoint = $rootScope.primaryClusterEndpoint = primaryAddress;
-
-        $http.get('api/RestoreService/' + $scope.primaryClusterEndpoint + '/' + $scope.primSecureThumbp)
-            .then(function (data, status) {
-                $scope.apps = data;
-                console.log(data);
-            }, function (data, status) {
-                $scope.apps = undefined;
-                window.alert('Please check the cluster details and try again');
-            });
-
     }
 
 }]);

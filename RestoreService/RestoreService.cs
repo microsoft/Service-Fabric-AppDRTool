@@ -152,11 +152,11 @@ namespace RestoreService
                     PartitionWrapper secondaryPartition = asyncEnumerator.Current.Value;
                     if (secondaryPartition == null)
                         continue;
-                    JToken backupInfoToken = await GetLatestBackupAvailable(secondaryPartition.primaryPartitionId, "https://" + secondaryPartition.primaryCluster.address + ":" + secondaryPartition.primaryCluster.httpEndpoint, secondaryPartition.primaryCluster.certificateThumbprint);
+                    JToken backupInfoToken = await GetLatestBackupAvailable(secondaryPartition.primaryPartitionId, secondaryPartition.primaryCluster.httpEndpoint, secondaryPartition.primaryCluster.certificateThumbprint);
                     if (backupInfoToken == null)
                         continue;
                     BackupInfo backupInfo = new BackupInfo(backupInfoToken["BackupId"].ToString(), backupInfoToken["BackupLocation"].ToString(), (DateTime)backupInfoToken["CreationTimeUtc"]);
-                    string backupPolicy = await GetPolicy("https://" + secondaryPartition.primaryCluster.address + ":" + secondaryPartition.primaryCluster.httpEndpoint, secondaryPartition.primaryCluster.certificateThumbprint, secondaryPartition.primaryPartitionId);
+                    string backupPolicy = await GetPolicy(secondaryPartition.primaryCluster.httpEndpoint, secondaryPartition.primaryCluster.certificateThumbprint, secondaryPartition.primaryPartitionId);
                     if (backupPolicy == null)
                         continue;
                     Task<RestoreResult> task = workFlowsInProgress.TryGetValue(primaryPartition, out Task<RestoreResult> value) ? value : null;
@@ -164,7 +164,7 @@ namespace RestoreService
                     {
                         if (secondaryPartition.LastBackupRestored == null || DateTime.Compare(backupInfo.backupTime, secondaryPartition.LastBackupRestored.backupTime) > 0)
                         {
-                            Task<RestoreResult> restoreTask = Task<RestoreResult>.Run(() => RestoreWorkFlow(backupInfoToken, backupPolicy, secondaryPartition, "https://" + secondaryPartition.secondaryCluster.address + ":" + secondaryPartition.secondaryCluster.httpEndpoint, secondaryPartition.secondaryCluster.certificateThumbprint));
+                            Task<RestoreResult> restoreTask = Task<RestoreResult>.Run(() => RestoreWorkFlow(backupInfoToken, backupPolicy, secondaryPartition, secondaryPartition.secondaryCluster.httpEndpoint, secondaryPartition.secondaryCluster.certificateThumbprint));
                             workFlowsInProgress.Add(asyncEnumerator.Current.Key, restoreTask);
                             PartitionWrapper updatedPartitionWrapper = ObjectExtensions.Copy(secondaryPartition);
                             updatedPartitionWrapper.LatestBackupAvailable = backupInfo;
@@ -188,7 +188,7 @@ namespace RestoreService
                         workFlowsInProgress.Remove(primaryPartition);
                         if (secondaryPartition.LastBackupRestored == null || DateTime.Compare(backupInfo.backupTime, secondaryPartition.LastBackupRestored.backupTime) > 0)
                         {
-                            Task<RestoreResult> restoreTask = Task<string>.Run(() => RestoreWorkFlow(backupInfoToken, backupPolicy, secondaryPartition, "https://" + secondaryPartition.secondaryCluster.address + ":" + secondaryPartition.secondaryCluster.httpEndpoint, secondaryPartition.secondaryCluster.certificateThumbprint));
+                            Task<RestoreResult> restoreTask = Task<string>.Run(() => RestoreWorkFlow(backupInfoToken, backupPolicy, secondaryPartition, secondaryPartition.secondaryCluster.httpEndpoint, secondaryPartition.secondaryCluster.certificateThumbprint));
                             workFlowsInProgress.Add(primaryPartition, restoreTask);
                             PartitionWrapper updatedPartitionWrapper = ObjectExtensions.Copy(secondaryPartition);
                             updatedPartitionWrapper.LatestBackupAvailable = backupInfo;
@@ -213,7 +213,7 @@ namespace RestoreService
         public async Task ConfigureApplication(string application, List<PolicyStorageEntity> policyDetails, ClusterDetails primaryCluster, ClusterDetails secondaryCluster)
         {
             IPolicyStorageService policyStorageClient = ServiceProxy.Create<IPolicyStorageService>(new Uri("fabric:/SFAppDRTool/PolicyStorageService"));
-            bool stored = policyStorageClient.PostStorageDetails(policyDetails, primaryCluster.address + ':' + primaryCluster.httpEndpoint, primaryCluster.certificateThumbprint).GetAwaiter().GetResult();
+            bool stored = policyStorageClient.PostStorageDetails(policyDetails, primaryCluster.httpEndpoint, primaryCluster.certificateThumbprint).GetAwaiter().GetResult();
             await MapPartitionsOfApplication(new Uri(application), primaryCluster, secondaryCluster, "partitionDictionary");
             IReliableDictionary<String, List<String>> configuredApplicationsDictionary = await this.StateManager.GetOrAddAsync<IReliableDictionary<String, List<String>>>("configuredApplicationsDictionary");
             using (var tx = this.StateManager.CreateTransaction())
@@ -296,7 +296,7 @@ namespace RestoreService
         public async Task ConfigureService(String applicationName, String serviceName, List<PolicyStorageEntity> policyDetails, ClusterDetails primaryCluster, ClusterDetails secondaryCluster)
         {
             IPolicyStorageService policyStorageClient = ServiceProxy.Create<IPolicyStorageService>(new Uri("fabric:/SFAppDRTool/PolicyStorageService"));
-            bool stored = await policyStorageClient.PostStorageDetails(policyDetails, primaryCluster.address + ':' + primaryCluster.httpEndpoint, primaryCluster.certificateThumbprint);
+            bool stored = await policyStorageClient.PostStorageDetails(policyDetails, primaryCluster.httpEndpoint, primaryCluster.certificateThumbprint);
             await MapPartitionsOfService(new Uri(applicationName), new Uri(serviceName), primaryCluster, secondaryCluster, "partitionDictionary");
         }
 
@@ -414,7 +414,7 @@ namespace RestoreService
                     if (partitionWrapper.HasValue)
                     {
                         PartitionWrapper mappedPartition = partitionWrapper.Value;
-                        mappedPartition.RestoreState = GetRestoreState(mappedPartition, "https://" + mappedPartition.secondaryCluster.address + ":" + mappedPartition.secondaryCluster.httpEndpoint, mappedPartition.secondaryCluster.certificateThumbprint);
+                        mappedPartition.RestoreState = GetRestoreState(mappedPartition, mappedPartition.secondaryCluster.httpEndpoint, mappedPartition.secondaryCluster.certificateThumbprint);
                         mappedPartitions.Add(mappedPartition);
                         ServiceEventSource.Current.ServiceMessage(this.Context, "Successfully Retrieved!!! ");
                     }
@@ -428,24 +428,11 @@ namespace RestoreService
         public async Task<String> GetPolicy(string primaryCluster, string clusterThumbprint, Guid partitionId)
         {
             string URL = primaryCluster + "/";
-            string urlParameters = "Partitions/" + partitionId + "/$/GetBackupConfigurationInfo" + "?api-version=6.2-preview";
+            string URLParameters = "Partitions/" + partitionId + "/$/GetBackupConfigurationInfo" + "?api-version=6.2-preview";
 
 
-            X509Certificate2 clientCert = GetClientCertificate(clusterThumbprint);
-            WebRequestHandler requestHandler = new WebRequestHandler();
-            requestHandler.ClientCertificates.Add(clientCert);
-            requestHandler.ServerCertificateValidationCallback = this.MyRemoteCertificateValidationCallback;
+            HttpResponseMessage response = await Utility.HTTPGetAsync(URL, URLParameters, clusterThumbprint);
 
-
-            HttpClient client = new HttpClient(requestHandler)
-            {
-                BaseAddress = new Uri(URL)
-            };
-            client.DefaultRequestHeaders.Accept.Add(
-            new MediaTypeWithQualityHeaderValue("application/json"));
-
-            // List data response.
-            HttpResponseMessage response = await client.GetAsync(urlParameters);  // Blocking call!
             if (response.IsSuccessStatusCode)
             {
                 // Parse the response body. Blocking!
@@ -467,21 +454,7 @@ namespace RestoreService
         {
 
             string URL = clusterConnectionString + "/";
-            string urlParameters = "Partitions/" + partition.partitionId + "/$/Restore" + "?api-version=6.2-preview";
-
-
-            X509Certificate2 clientCert = GetClientCertificate(clusterThumbprint);
-            WebRequestHandler requestHandler = new WebRequestHandler();
-            requestHandler.ClientCertificates.Add(clientCert);
-            requestHandler.ServerCertificateValidationCallback = this.MyRemoteCertificateValidationCallback;
-
-
-            HttpClient client = new HttpClient(requestHandler)
-            {
-                BaseAddress = new Uri(URL)
-            };
-            client.DefaultRequestHeaders.Accept.Add(
-            new MediaTypeWithQualityHeaderValue("application/json"));
+            string URLParameters = "Partitions/" + partition.partitionId + "/$/Restore" + "?api-version=6.2-preview";
 
             BackupStorage backupStorage = await GetBackupStorageDetails(policy);
             if (backupStorage == null)
@@ -492,7 +465,8 @@ namespace RestoreService
 
             BackupInfo backupInfo = new BackupInfo(latestbackupInfo["BackupId"].ToString(), latestbackupInfo["BackupLocation"].ToString(), backupStorage, (DateTime)latestbackupInfo["CreationTimeUtc"]);
 
-            HttpResponseMessage response = await client.PostAsJsonAsync(urlParameters, backupInfo);  // Blocking call!
+            HttpResponseMessage response = await Utility.HTTPPostAsync(URL, URLParameters, backupInfo, clusterThumbprint);
+
             if (response.IsSuccessStatusCode || response.StatusCode == System.Net.HttpStatusCode.Conflict) // As calling Restore multiple times results in 409/Conflict Error, when in progress
             {
                 string restoreState = "";
@@ -510,8 +484,8 @@ namespace RestoreService
         // Maps the paritions of the applications from primary cluster and secondary cluster
         public async Task MapPartitionsOfApplication(Uri applicationName, ClusterDetails primaryCluster, ClusterDetails secondaryCluster, String partitionDictionaryName)
         {
-            FabricClient primaryFabricClient = GetSecureFabricClient(primaryCluster.address + ':' + primaryCluster.clientConnectionEndpoint, primaryCluster.certificateThumbprint, primaryCluster.commonName);
-            FabricClient secondaryFabricClient = GetSecureFabricClient(secondaryCluster.address + ':' + secondaryCluster.clientConnectionEndpoint, secondaryCluster.certificateThumbprint, secondaryCluster.commonName);
+            FabricClient primaryFabricClient = GetSecureFabricClient(primaryCluster.clientConnectionEndpoint, primaryCluster.certificateThumbprint, primaryCluster.commonName);
+            FabricClient secondaryFabricClient = GetSecureFabricClient(secondaryCluster.clientConnectionEndpoint, secondaryCluster.certificateThumbprint, secondaryCluster.commonName);
 
             ServiceList services = await primaryFabricClient.QueryManager.GetServiceListAsync(applicationName);
             foreach(Service service in services)
@@ -548,8 +522,8 @@ namespace RestoreService
 
         public async Task MapPartitionsOfService(Uri applicationName, Uri serviceName, ClusterDetails primaryCluster, ClusterDetails secondaryCluster, String partitionDictionaryName)
         {
-            FabricClient primaryFabricClient = GetSecureFabricClient(primaryCluster.address + ':' + primaryCluster.clientConnectionEndpoint, primaryCluster.certificateThumbprint, primaryCluster.commonName);
-            FabricClient secondaryFabricClient = GetSecureFabricClient(secondaryCluster.address + ':' + secondaryCluster.clientConnectionEndpoint, secondaryCluster.certificateThumbprint, secondaryCluster.commonName);
+            FabricClient primaryFabricClient = GetSecureFabricClient(primaryCluster.clientConnectionEndpoint, primaryCluster.certificateThumbprint, primaryCluster.commonName);
+            FabricClient secondaryFabricClient = GetSecureFabricClient(secondaryCluster.clientConnectionEndpoint, secondaryCluster.certificateThumbprint, secondaryCluster.commonName);
 
             ServicePartitionList primaryPartitions = await primaryFabricClient.QueryManager.GetPartitionListAsync(serviceName);
             ServicePartitionList secondaryPartitions = await secondaryFabricClient.QueryManager.GetPartitionListAsync(serviceName);
@@ -558,7 +532,7 @@ namespace RestoreService
 
         public static FabricClient GetSecureFabricClient(string connectionEndpoint, string thumbprint, string cname)
         {
-            var xc = GetCredentials(thumbprint, thumbprint, cname);
+            var xc = Utility.GetCredentials(thumbprint, thumbprint, cname);
 
             FabricClient fc;
 
@@ -572,19 +546,6 @@ namespace RestoreService
                 ServiceEventSource.Current.Message("Web Service: Exception while trying to connect securely: {0}", e);
                 throw;
             }
-        }
-
-        static X509Credentials GetCredentials(string clientCertThumb, string serverCertThumb, string name)
-        {
-            X509Credentials xc = new X509Credentials();
-            xc.StoreLocation = StoreLocation.CurrentUser;
-            xc.StoreName = "My";
-            xc.FindType = X509FindType.FindByThumbprint;
-            xc.FindValue = clientCertThumb;
-            xc.RemoteCommonNames.Add(name);
-            xc.RemoteCertThumbprints.Add(serverCertThumb);
-            xc.ProtectionLevel = System.Fabric.ProtectionLevel.EncryptAndSign;
-            return xc;
         }
 
         public async Task MapPartitions(Uri applicationName, Uri serviceName, ClusterDetails primaryCluster, ServicePartitionList partitionsInPrimary, ClusterDetails secondaryCluster,ServicePartitionList partitionsInSecondary, string partitionDictionaryName)
@@ -683,24 +644,9 @@ namespace RestoreService
         public async Task<JToken> GetLatestBackupAvailable(Guid partitionId, String clusterConnnectionString, String clusterThumbprint)
         {
             string URL = clusterConnnectionString + "/";
-            string urlParameters = "Partitions/" + partitionId + "/$/GetBackups" + "?api-version=6.2-preview";
+            string URLParameters = "Partitions/" + partitionId + "/$/GetBackups" + "?api-version=6.2-preview";
 
-
-            X509Certificate2 clientCert = GetClientCertificate(clusterThumbprint);
-            WebRequestHandler requestHandler = new WebRequestHandler();
-            requestHandler.ClientCertificates.Add(clientCert);
-            requestHandler.ServerCertificateValidationCallback = this.MyRemoteCertificateValidationCallback;
-
-
-            HttpClient client = new HttpClient(requestHandler)
-            {
-                BaseAddress = new Uri(URL)
-            };
-            client.DefaultRequestHeaders.Accept.Add(
-            new MediaTypeWithQualityHeaderValue("application/json"));
-
-            // List data response.
-            HttpResponseMessage response = await client.GetAsync(urlParameters);  // Blocking call!
+            HttpResponseMessage response = await Utility.HTTPGetAsync(URL, URLParameters, clusterThumbprint);
             if (response.IsSuccessStatusCode)
             {
                 // Parse the response body. Blocking!
@@ -719,42 +665,6 @@ namespace RestoreService
             }
         }
 
-        static X509Certificate2 GetClientCertificate(string Thumbprint)
-        {
-            X509Store userCaStore = new X509Store(StoreName.My, StoreLocation.CurrentUser);
-            try
-            {
-                userCaStore.Open(OpenFlags.ReadOnly);
-                X509Certificate2Collection certificatesInStore = userCaStore.Certificates;
-                X509Certificate2Collection findResult = certificatesInStore.Find(X509FindType.FindByThumbprint, Thumbprint, false);
-                X509Certificate2 clientCertificate = null;
-
-                if (findResult.Count == 1)
-                {
-                    clientCertificate = findResult[0];
-                }
-                else
-                {
-                    throw new Exception("Unable to locate the correct client certificate.");
-                }
-                return clientCertificate;
-            }
-            catch
-            {
-                throw;
-            }
-            finally
-            {
-                userCaStore.Close();
-            }
-        }
-
-        private bool MyRemoteCertificateValidationCallback(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
-        {
-            return true;
-        }
-
-
         /// <summary>
         /// This method fetches the restore state of each restore flow task
         /// </summary>
@@ -765,24 +675,9 @@ namespace RestoreService
         {
 
             string URL = clusterConnectionString + "/";
-            string urlParameters = "Partitions/" + partition.partitionId + "/$/GetRestoreProgress" + "?api-version=6.2-preview";
+            string URLParameters = "Partitions/" + partition.partitionId + "/$/GetRestoreProgress" + "?api-version=6.2-preview";
 
-
-            X509Certificate2 clientCert = GetClientCertificate(clusterThumbprint);
-            WebRequestHandler requestHandler = new WebRequestHandler();
-            requestHandler.ClientCertificates.Add(clientCert);
-            requestHandler.ServerCertificateValidationCallback = this.MyRemoteCertificateValidationCallback;
-
-
-            HttpClient client = new HttpClient(requestHandler)
-            {
-                BaseAddress = new Uri(URL)
-            };
-            client.DefaultRequestHeaders.Accept.Add(
-            new MediaTypeWithQualityHeaderValue("application/json"));
-
-            // List data response.
-            HttpResponseMessage response = client.GetAsync(urlParameters).Result;  // Blocking call!
+            HttpResponseMessage response = Utility.HTTPGetAsync(URL, URLParameters, clusterThumbprint).Result;
             if (response.IsSuccessStatusCode)
             {
                 var content = response.Content.ReadAsAsync<JObject>().Result;

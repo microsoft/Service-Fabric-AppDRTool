@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Fabric;
 using System.Linq;
-using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -16,9 +15,7 @@ using PolicyStorageService;
 using System.Fabric.Query;
 using WebInterface.Models;
 using System.Xml.Linq;
-using System.Security.Cryptography.X509Certificates;
 using System.Net;
-using System.Net.Security;
 using System.Net.Http;
 
 namespace WebInterface.Controllers
@@ -136,7 +133,7 @@ namespace WebInterface.Controllers
 
         public static FabricClient GetSecureFabricClient(string connectionEndpoint, string thumbprint, string cname)
         {
-            var xc = GetCredentials(thumbprint, thumbprint, cname);
+            var xc = Utility.GetCredentials(thumbprint, thumbprint, cname);
 
             FabricClient fc;
 
@@ -152,73 +149,14 @@ namespace WebInterface.Controllers
             }
         }
 
-        static X509Credentials GetCredentials(string clientCertThumb, string serverCertThumb, string name)
-        {
-            X509Credentials xc = new X509Credentials();
-            xc.StoreLocation = StoreLocation.CurrentUser;
-            xc.StoreName = "My";
-            xc.FindType = X509FindType.FindByThumbprint;
-            xc.FindValue = clientCertThumb;
-            xc.RemoteCommonNames.Add(name);
-            xc.RemoteCertThumbprints.Add(serverCertThumb);
-            xc.ProtectionLevel = System.Fabric.ProtectionLevel.EncryptAndSign;
-            return xc;
-        }
-
-        static X509Certificate2 GetClientCertificate(String Thumbprint)
-        {
-            X509Store userCaStore = new X509Store(StoreName.My, StoreLocation.CurrentUser);
-            try
-            {
-                userCaStore.Open(OpenFlags.ReadOnly);
-                X509Certificate2Collection certificatesInStore = userCaStore.Certificates;
-                X509Certificate2Collection findResult = certificatesInStore.Find(X509FindType.FindByThumbprint, Thumbprint, false);
-                X509Certificate2 clientCertificate = null;
-
-                if (findResult.Count == 1)
-                {
-                    clientCertificate = findResult[0];
-                }
-                else
-                {
-                    throw new Exception("Unable to locate the correct client certificate.");
-                }
-                return clientCertificate;
-            }
-            catch
-            {
-                throw;
-            }
-            finally
-            {
-                userCaStore.Close();
-            }
-        }
-
-
-        private async Task<PolicyStorageEntity> getPolicyDetails(string cs, string thumbprint, string policyName)
+        private async Task<PolicyStorageEntity> getPolicyDetails(string httpConnectionString, string thumbprint, string policyName)
         {
             PolicyStorageEntity policyStorageEntity = new PolicyStorageEntity();
             policyStorageEntity.policy = policyName;
-            string URL = "https://" + cs + "/";
-            string urlParameters = "BackupRestore/BackupPolicies/" + policyName + "?api-version=6.2-preview";
+            string URL = httpConnectionString + "/";
+            string URLParameters = "BackupRestore/BackupPolicies/" + policyName + "?api-version=6.2-preview";
 
-
-            X509Certificate2 clientCert = GetClientCertificate(thumbprint);
-            WebRequestHandler requestHandler = new WebRequestHandler();
-            requestHandler.ClientCertificates.Add(clientCert);
-            requestHandler.ServerCertificateValidationCallback = this.MyRemoteCertificateValidationCallback;
-
-
-            HttpClient client = new HttpClient(requestHandler)
-            {
-                BaseAddress = new Uri(URL)
-            };
-            client.DefaultRequestHeaders.Accept.Add(
-            new MediaTypeWithQualityHeaderValue("application/json"));
-
-            // List data response.
-            HttpResponseMessage response = await client.GetAsync(urlParameters);  // Blocking call!
+            HttpResponseMessage response = await Utility.HTTPGetAsync(URL, URLParameters, thumbprint);
             if (response.IsSuccessStatusCode)
             {
                 // Parse the response body. Blocking!
@@ -235,40 +173,21 @@ namespace WebInterface.Controllers
             }
         }
 
-        [Route("servicepolicies/{cs}/{thumbprint}/{serviceName}")]
+        [Route("servicepolicies/{httpConnectionStringEncoded}/{thumbprint}/{serviceName}")]
         [HttpGet]
-        public async Task<IActionResult> GetServicePolicies(String cs, String thumbprint, String serviceName)
+        public async Task<IActionResult> GetServicePolicies(String httpConnectionStringEncoded, String thumbprint, String serviceName)
         {
+
+            String httpConnectionString = Utility.decodeHTTPString(httpConnectionStringEncoded);
+
             List<PolicyStorageEntity> policyDetails = new List<PolicyStorageEntity>();
             List<string> policyNames = new List<string>();
             string mServiceName = serviceName.Replace("_", "/");
-            string URL = "https://" + cs + "/";
+            string URL = httpConnectionString + "/";
                 
-            string urlParameters = "Services/" + mServiceName + "/$/GetBackupConfigurationInfo" + "?api-version=6.2-preview";
+            string URLParameters = "Services/" + mServiceName + "/$/GetBackupConfigurationInfo" + "?api-version=6.2-preview";
 
-
-            X509Certificate2 clientCert = GetClientCertificate(thumbprint);
-            WebRequestHandler requestHandler = new WebRequestHandler();
-            requestHandler.ClientCertificates.Add(clientCert);
-            requestHandler.ServerCertificateValidationCallback = this.MyRemoteCertificateValidationCallback;
-
-            HttpClient client = new HttpClient(requestHandler)
-            {
-                BaseAddress = new Uri(URL)
-            };
-            client.DefaultRequestHeaders.Accept.Add(
-            new MediaTypeWithQualityHeaderValue("application/json"));
-
-            HttpResponseMessage response;
-            try
-            {
-                response = await client.GetAsync(urlParameters);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine("Exception occured.");
-                return null;
-            }
+            HttpResponseMessage response = await Utility.HTTPGetAsync(URL, URLParameters, thumbprint);
             if (response.IsSuccessStatusCode)
             {
                 var content = response.Content.ReadAsAsync<JObject>().Result;
@@ -288,7 +207,7 @@ namespace WebInterface.Controllers
 
             foreach (string policyName in policyNames)
             {
-                PolicyStorageEntity policyStorageEntity = await this.getPolicyDetails(cs, thumbprint, policyName);
+                PolicyStorageEntity policyStorageEntity = await this.getPolicyDetails(httpConnectionString, thumbprint, policyName);
 
                 if (policyStorageEntity != null)
                 {
@@ -296,7 +215,6 @@ namespace WebInterface.Controllers
                 }
                 else
                 {
-                    //Console.WriteLine("{0} ({1})", (int)response.StatusCode, response.ReasonPhrase);
                     return null;
                 }
             }
@@ -304,39 +222,20 @@ namespace WebInterface.Controllers
 
         }
 
-        [Route("apppolicies/{cs}/{thumbprint}/{appName}")]
+        [Route("apppolicies/{httpConnectionStringEncoded}/{thumbprint}/{appName}")]
         [HttpGet]
-        public async Task<IActionResult> GetApplicationPolicies(String cs, String thumbprint, String appName)
+        public async Task<IActionResult> GetApplicationPolicies(String httpConnectionStringEncoded, String thumbprint, String appName)
         {
+
+            String httpConnectionString = Utility.decodeHTTPString(httpConnectionStringEncoded); 
+
             List<PolicyStorageEntity> policyDetails = new List<PolicyStorageEntity>();
             List<string> policyNames = new List<string>();
-            string URL = "https://" + cs + "/";
+            string URL = httpConnectionString + "/";
 
-            string urlParameters = "Applications/" + appName + "/$/GetBackupConfigurationInfo" + "?api-version=6.2-preview";
+            string URLParameters = "Applications/" + appName + "/$/GetBackupConfigurationInfo" + "?api-version=6.2-preview";
 
-
-            X509Certificate2 clientCert = GetClientCertificate(thumbprint);
-            WebRequestHandler requestHandler = new WebRequestHandler();
-            requestHandler.ClientCertificates.Add(clientCert);
-            requestHandler.ServerCertificateValidationCallback = this.MyRemoteCertificateValidationCallback;
-
-            HttpClient client = new HttpClient(requestHandler)
-            {
-                BaseAddress = new Uri(URL)
-            };
-            client.DefaultRequestHeaders.Accept.Add(
-            new MediaTypeWithQualityHeaderValue("application/json"));
-
-            HttpResponseMessage response;
-            try
-            {
-                response = await client.GetAsync(urlParameters);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine("Exception occured.");
-                return null;
-            }
+            HttpResponseMessage response = await Utility.HTTPGetAsync(URL, URLParameters, thumbprint);
             if (response.IsSuccessStatusCode)
             {
                 var content = response.Content.ReadAsAsync<JObject>().Result;
@@ -356,7 +255,7 @@ namespace WebInterface.Controllers
 
             foreach (string policyName in policyNames)
             {
-                PolicyStorageEntity policyStorageEntity = await this.getPolicyDetails(cs, thumbprint, policyName);
+                PolicyStorageEntity policyStorageEntity = await this.getPolicyDetails(httpConnectionString, thumbprint, policyName);
 
                 if (policyStorageEntity != null)
                 {
@@ -364,30 +263,26 @@ namespace WebInterface.Controllers
                 }
                 else
                 {
-                    //Console.WriteLine("{0} ({1})", (int)response.StatusCode, response.ReasonPhrase);
                     return null;
                 }
             }
             return this.Json(policyDetails);
-        }
-
-        private bool MyRemoteCertificateValidationCallback(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
-        {
-            return true;
         }
 
         [HttpPost]
-        [Route("configureapp/{primaryClusterAddress}/{primaryThumbprint}/{primaryCommonName}/{secondaryClusterAddress}/{secondaryThumbprint}/{secondaryCommonName}")]
-        public void ConfigureApplication([FromBody]JObject content, string primaryClusterAddress, string primaryThumbprint, string primaryCommonName, string secondaryClusterAddress, string secondaryThumbprint, string secondaryCommonName)
+        [Route("configureapp/{primaryClusterAddress}/{primaryHttpEndpointEncoded}/{primaryThumbprint}/{primaryCommonName}/{secondaryClusterAddress}/{secondaryHttpEndpointEncoded}/{secondaryThumbprint}/{secondaryCommonName}")]
+        public void ConfigureApplication([FromBody]JObject content, string primaryClusterAddress, string primaryHttpEndpointEncoded, string primaryThumbprint, string primaryCommonName, 
+                                                                    string secondaryClusterAddress, string secondaryHttpEndpointEncoded, string secondaryThumbprint, string secondaryCommonName)
         {
-            string primaryHttpEndpoint = "19080";
-            string secondaryHttpEndpoint = "19080";
 
             string[] primaryClusterDetails = primaryClusterAddress.Split(':');
             string[] secondaryClusterDetails = secondaryClusterAddress.Split(':');
 
-            ClusterDetails primaryCluster = new ClusterDetails(primaryClusterDetails[0], primaryHttpEndpoint, primaryClusterDetails[1], primaryThumbprint, primaryCommonName);
-            ClusterDetails secondaryCluster = new ClusterDetails(secondaryClusterDetails[0], secondaryHttpEndpoint, secondaryClusterDetails[1], secondaryThumbprint, secondaryCommonName);
+            string primaryHttpEndpoint = Utility.decodeHTTPString(primaryHttpEndpointEncoded);
+            string secondaryHttpEndpoint = Utility.decodeHTTPString(secondaryHttpEndpointEncoded);
+
+            ClusterDetails primaryCluster = new ClusterDetails(primaryClusterDetails[0], primaryHttpEndpoint, primaryClusterAddress, primaryThumbprint, primaryCommonName);
+            ClusterDetails secondaryCluster = new ClusterDetails(secondaryClusterDetails[0], secondaryHttpEndpoint, secondaryClusterAddress, secondaryThumbprint, secondaryCommonName);
 
             JArray applicationData = (JArray)content["ApplicationList"];
             JArray policiesData = (JArray)content["PoliciesList"];
@@ -417,17 +312,18 @@ namespace WebInterface.Controllers
 
         // Calls configure service method of restore service
         [HttpPost]
-        [Route("configureservice/{primaryClusterAddress}/{primaryThumbprint}/{primaryCommonName}/{secondaryClusterAddress}/{secondaryThumbprint}/{secondaryCommonName}")]
-        public void ConfigureService([FromBody]JObject content, string primaryClusterAddress, string primaryThumbprint, string primaryCommonName, string secondaryClusterAddress, string secondaryThumbprint, string secondaryCommonName)
+        [Route("configureservice/{primaryClusterAddress}/{primaryHttpEndpointEncoded}/{primaryThumbprint}/{primaryCommonName}/{secondaryClusterAddress}/{secondaryHttpEndpointEncoded}/{secondaryThumbprint}/{secondaryCommonName}")]
+        public void ConfigureService([FromBody]JObject content, string primaryClusterAddress, string primaryHttpEndpointEncoded, string primaryThumbprint, string primaryCommonName,
+                                                                string secondaryClusterAddress, string secondaryHttpEndpointEncoded, string secondaryThumbprint, string secondaryCommonName)
         {
-            string primaryHttpEndpoint = "19080";
-            string secondaryHttpEndpoint = "19080";
-
             string[] primaryClusterDetails = primaryClusterAddress.Split(':');
             string[] secondaryClusterDetails = secondaryClusterAddress.Split(':');
 
-            ClusterDetails primaryCluster = new ClusterDetails(primaryClusterDetails[0], primaryHttpEndpoint, primaryClusterDetails[1], primaryThumbprint, primaryCommonName);
-            ClusterDetails secondaryCluster = new ClusterDetails(secondaryClusterDetails[0], secondaryHttpEndpoint, secondaryClusterDetails[1], secondaryThumbprint, secondaryCommonName);
+            string primaryHttpEndpoint = Utility.decodeHTTPString(primaryHttpEndpointEncoded);
+            string secondaryHttpEndpoint = Utility.decodeHTTPString(secondaryHttpEndpointEncoded);
+
+            ClusterDetails primaryCluster = new ClusterDetails(primaryClusterDetails[0], primaryHttpEndpoint, primaryClusterAddress, primaryThumbprint, primaryCommonName);
+            ClusterDetails secondaryCluster = new ClusterDetails(secondaryClusterDetails[0], secondaryHttpEndpoint, secondaryClusterAddress, secondaryThumbprint, secondaryCommonName);
 
             JArray serviceData = (JArray)content["ServiceList"];
             JArray policiesData = (JArray)content["PoliciesList"];
@@ -456,9 +352,12 @@ namespace WebInterface.Controllers
         }
 
         [HttpPost]
-        [Route("updatepolicy/{primaryClusterAddress}/{primaryClusterThumbprint}")]
-        public void UpdatePolicy([FromBody]JObject content, string primaryClusterAddress, string primaryClusterThumbprint)
+        [Route("updatepolicy/{primaryHttpEndpointEncoded}/{primaryClusterThumbprint}")]
+        public void UpdatePolicy([FromBody]JObject content, string primaryHttpEndpointEncoded, string primaryClusterThumbprint)
         {
+
+            string primaryClusterAddress = Utility.decodeHTTPString(primaryHttpEndpointEncoded);
+
             JArray policiesData = (JArray)content["PoliciesList"];
             List<PolicyStorageEntity> policicesList = JsonConvert.DeserializeObject<List<PolicyStorageEntity>>(policiesData.ToString());
 
@@ -668,31 +567,6 @@ namespace WebInterface.Controllers
             return new HashSet<String>(configuredApplicationNames);
         }
 
-        public string GetClientConnectionEndpoint(string clusterConnectionString)
-        {
-            string URL = "http://" + clusterConnectionString + "/$/GetClusterManifest";
-            string urlParameters = "?api-version=6.2";
-            HttpClient client = new HttpClient();
-            client.BaseAddress = new Uri(URL);
-            client.DefaultRequestHeaders.Accept.Add(
-            new MediaTypeWithQualityHeaderValue("application/json"));
-
-            HttpResponseMessage response = client.GetAsync(urlParameters).Result;
-            if (response.IsSuccessStatusCode)
-            {
-                var content = response.Content.ReadAsAsync<JObject>().Result;
-                JValue objectData = (JValue)content["Manifest"];
-                XElement xel = XElement.Parse(objectData.ToString());
-                XElement xElement = xel.Descendants().First().Descendants().First().Descendants().First().Descendants().First();
-
-                return xElement.Attribute("Port").Value.ToString();
-            }
-            else
-            {
-                Console.WriteLine("{0} ({1})", (int)response.StatusCode, response.ReasonPhrase);
-                return null;
-            }
-        }
     }
 
 

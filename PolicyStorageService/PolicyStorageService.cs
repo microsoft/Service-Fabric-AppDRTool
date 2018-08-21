@@ -6,6 +6,7 @@ using System.Net.Http;
 using System.Security.Cryptography.X509Certificates;
 using System.Net.Security;
 using System.Net.Http.Headers;
+using RestoreService;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.ServiceFabric.Data;
@@ -93,7 +94,7 @@ namespace PolicyStorageService
                 {
                     var result = await myDictionary.TryAddAsync(tx, entity.policy, backupStorage);
 
-                    ServiceEventSource.Current.ServiceMessage(this.Context, result ? "Successfully added policy {0} storgae details" : "Already Exists", entity.policy);
+                    ServiceEventSource.Current.ServiceMessage(this.Context, result ? "Successfully added policy {0} storage details" : "Already Exists", entity.policy);
 
                     // If an exception is thrown before calling CommitAsync, the transaction aborts, all changes are 
                     // discarded, and nothing is saved to the secondary replicas.
@@ -149,25 +150,11 @@ namespace PolicyStorageService
 
         public async Task<BackupStorage> GetStorageInfo(string policy, string primaryClusterConnectionString, string clusterThumbprint)
         {
-            string URL = "https://" + primaryClusterConnectionString + "/";
-            string urlParameters = "BackupRestore/BackupPolicies/" + policy + "?api-version=6.2-preview";
+            string URL = primaryClusterConnectionString + "/";
+            string URLParameters = "BackupRestore/BackupPolicies/" + policy + "?api-version=6.2-preview";
 
+            HttpResponseMessage response = await Utility.HTTPGetAsync(URL, URLParameters, clusterThumbprint);
 
-            X509Certificate2 clientCert = GetClientCertificate(clusterThumbprint);
-            WebRequestHandler requestHandler = new WebRequestHandler();
-            requestHandler.ClientCertificates.Add(clientCert);
-            requestHandler.ServerCertificateValidationCallback = this.MyRemoteCertificateValidationCallback;
-
-
-            HttpClient client = new HttpClient(requestHandler)
-            {
-                BaseAddress = new Uri(URL)
-            };
-            client.DefaultRequestHeaders.Accept.Add(
-            new MediaTypeWithQualityHeaderValue("application/json"));
-
-            // List data response.
-            HttpResponseMessage response = await client.GetAsync(urlParameters);  // Blocking call!
             if (response.IsSuccessStatusCode)
             {
                 // Parse the response body. Blocking!
@@ -181,41 +168,6 @@ namespace PolicyStorageService
                 Console.WriteLine("{0} ({1})", (int)response.StatusCode, response.ReasonPhrase);
                 return null;
             }
-        }
-
-        static X509Certificate2 GetClientCertificate(string Thumbprint)
-        {
-            X509Store userCaStore = new X509Store(StoreName.My, StoreLocation.CurrentUser);
-            try
-            {
-                userCaStore.Open(OpenFlags.ReadOnly);
-                X509Certificate2Collection certificatesInStore = userCaStore.Certificates;
-                X509Certificate2Collection findResult = certificatesInStore.Find(X509FindType.FindByThumbprint, Thumbprint, false);
-                X509Certificate2 clientCertificate = null;
-
-                if (findResult.Count == 1)
-                {
-                    clientCertificate = findResult[0];
-                }
-                else
-                {
-                    throw new Exception("Unable to locate the correct client certificate.");
-                }
-                return clientCertificate;
-            }
-            catch
-            {
-                throw;
-            }
-            finally
-            {
-                userCaStore.Close();
-            }
-        }
-
-        private bool MyRemoteCertificateValidationCallback(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
-        {
-            return true;
         }
     }
 }

@@ -115,7 +115,9 @@
     </table> -->
         <div style="clear: both;"></div>
         <div style="width: 100%">
-            <h3>Applications: </h3>
+            <h3 ng-if="applicationsServicesStatusKeys.length > 0">Applications: </h3>
+            <div ng-if="applicationsServicesStatusKeys.length == 0"
+                ng-init="gotoconfigfromstatus()"></div>
             <div ng-repeat="appName in applicationsServicesStatusKeys">
                 <div data-role="panel"
                      data-title-caption="<h4>{{appName}}</h4>"

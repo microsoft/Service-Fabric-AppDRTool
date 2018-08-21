@@ -192,6 +192,11 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
         console.log(contentData);
         var content = JSON.stringify(contentData);
 
+        if (!$scope.validatePolicies(contentData)) {
+            runToast("Could not configure application for DR. Please ensure that you enter the credentials for all policies associated with the application. Please try again.", "alert");
+            return;
+        }
+
         $http.post('api/RestoreService/configureapp/' + $rootScope.primaryClusterEndpoint + '/' + $rootScope.primaryClusterHTTPEndpoint.replace("//", "__") + '/' + $rootScope.primaryClusterThumbprint + '/' + $rootScope.primaryClusterCommonName + '/'
             + $rootScope.secondaryClusterEndpoint + '/' + $rootScope.secondaryClusterHTTPEndpoint.replace("//", "__") + '/' + $rootScope.secondaryClusterThumbprint + '/' + $rootScope.secondaryClusterCommonName, content)
             .then(function (data, status) {
@@ -207,6 +212,31 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
             }, function (data, status) {
                 runToast("Applications not configured. Try again", "alert");
             });
+    }
+
+    $scope.validatePolicies = function (contentData) {
+        policiesList = contentData.PoliciesList;
+
+        for (var i = 0; i < policiesList.length; i++) {
+            var policy = policiesList[i];
+            if (policy.backupStorage.storageKind == 'AzureBlobStore') {
+                var cs = policy.backupStorage.connectionString;
+                if (cs == "" || cs == "****") {
+                    return false;
+                }
+            }
+            else {
+                var pu = policy.backupStorage.primaryUsername;
+                var pp = policy.backupStorage.primaryPassword;
+                var su = policy.backupStorage.secondaryUsername;
+                var sp = policy.backupStorage.secondaryPassword;
+                if (pu == "" || pp == "" || su == "" || sp == "") {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 
     $scope.disconfigureApplication = function () {
@@ -256,6 +286,11 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
         console.log("Calling from configureApplication");
         console.log(contentData);
         var content = JSON.stringify(contentData);
+
+        if (!$scope.validatePolicies(contentData)) {
+            runToast("Could not configure service for DR. Please ensure that the credentials for policy associated with service is not empty. Please try again.", "alert");
+            return;
+        }
 
         $http.post('api/RestoreService/configureservice/' + $rootScope.primaryClusterEndpoint + '/' + $rootScope.primaryClusterHTTPEndpoint.replace("//", "__") + '/' + $rootScope.primaryClusterThumbprint + '/' + $rootScope.primaryClusterCommonName + '/'
             + $rootScope.secondaryClusterEndpoint.replace("//", "__") + '/' + $rootScope.secondaryClusterHTTPEndpoint.replace("//", "__") + '/' + $rootScope.secondaryClusterThumbprint + '/' + $rootScope.secondaryClusterCommonName, content)
@@ -486,7 +521,7 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
                 $rootScope.apppolicies = $scope.apppolicies;
                 $rootScope.appConfigLoad = false;
             }, function (data, status) {
-                runToast("Could not load application policies. Please try again.");
+                runToast("Could not load application policies. Please try again.", "alert");
                 $scope.apppolicies = undefined;
                 $rootScope.appConfigLoad = false;
                 $rootScope.appNoPolicyFoundFlag = true;
@@ -505,6 +540,11 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
     $scope.gotoconfigure = function () {
         $window.location.href = '#!Configure';
         $window.location.reload();
+    }
+
+    $scope.gotoconfigfromstatus = function () {
+        runToast("No Applications configured yet for disaster recovery. Redirecting to Configure page.", "info");
+        $scope.gotoconfigure();
     }
 
     $scope.getAppsOnPrimaryCluster = function () {
@@ -533,6 +573,10 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
         $rootScope.primaryClusterCommonName = $scope.primaryCommonName;
         $rootScope.secondaryClusterCommonName = $scope.secondaryCommonName;
 
+        if (!$scope.validateClusterDetails()) {
+            runToast("Please ensure that you have entered all the details to connect to clusters. Try again.", "alert");
+            return;
+        }
 
         $location.path("/servConfig").search('rt', Math.random());
         $rootScope.splashLoad = true;
@@ -564,10 +608,23 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
                 $rootScope.splashLoad = false;
                 runToast('Please check the cluster details and try again', 'alert');
             });
-
-        
-
     };
+
+    $scope.validateClusterDetails = function () {
+        if (!$rootScope.primaryClusterEndpoint ||
+            !$rootScope.primaryClusterEndpoint.includes(":") ||
+            !$rootScope.primaryClusterHTTPEndpoint.includes("http") ||
+            $rootScope.primaryClusterThumbprint == "" ||
+            $rootScope.primaryClusterCommonName == "" ||
+            !$rootScope.secondaryClusterEndpoint ||
+            !$rootScope.primaryClusterEndpoint.includes(":") ||
+            !$rootScope.secondaryClusterHTTPEndpoint.includes("http") ||
+            $rootScope.secondaryClusterThumbprint == "" ||
+            $rootScope.secondaryClusterCommonName == "") {
+            return false;
+        }
+        return true;     
+    }
 
     $scope.updateHTTPEndpoint = function (cluster) {
         if (cluster == 'primary') {

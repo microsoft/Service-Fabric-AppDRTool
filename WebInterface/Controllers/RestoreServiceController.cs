@@ -59,10 +59,15 @@ namespace WebInterface.Controllers
                         secServices.Add(service.ServiceName.ToString());
                     }
                 }
-                catch (Exception e)
+                catch (System.Fabric.FabricElementNotFoundException e)
                 {
                     ServiceEventSource.Current.Message("Web Service: Could not find application on secondary cluster: {0}", e);
                     applicationStatus = "NotExist";
+                }
+                catch (Exception e)
+                {
+                    ServiceEventSource.Current.Message("Web Service: Exception with Fabric Client Query Manager {0}", e);
+                    throw;
                 }
 
                 if (configuredApplications.Contains(applicationName))
@@ -365,7 +370,8 @@ namespace WebInterface.Controllers
 
             try
             {
-                policyStorageClient.PostStorageDetails(policicesList, primaryClusterAddress, primaryClusterThumbprint);
+                bool updateOverwritePolicy = true;
+                policyStorageClient.PostStorageDetails(policicesList, primaryClusterAddress, primaryClusterThumbprint, updateOverwritePolicy);
             }
             catch (Exception ex)
             {

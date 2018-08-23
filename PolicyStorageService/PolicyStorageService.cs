@@ -62,7 +62,7 @@ namespace PolicyStorageService
         /// <param name="policies"></param>
         /// <param name="primaryClusterConnectionString"></param>
         /// <returns></returns>
-        public async Task<bool> PostStorageDetails(List<PolicyStorageEntity> policies, string primaryClusterConnectionString, string clusterThumbprint)
+        public async Task<bool> PostStorageDetails(List<PolicyStorageEntity> policies, string primaryClusterConnectionString, string clusterThumbprint, bool overwritePolicyDetails)
         {
             IReliableDictionary<string, BackupStorage> myDictionary = await this.StateManager.GetOrAddAsync<IReliableDictionary<string, BackupStorage>>("storageDictionary");
             foreach (var entity in policies)
@@ -92,10 +92,18 @@ namespace PolicyStorageService
                 }
                 using (var tx = this.StateManager.CreateTransaction())
                 {
-                    var result = await myDictionary.TryAddAsync(tx, entity.policy, backupStorage);
+                    ConditionalValue<BackupStorage> cndbackupStorage = await myDictionary.TryGetValueAsync(tx, entity.policy);
 
-                    ServiceEventSource.Current.ServiceMessage(this.Context, result ? "Successfully added policy {0} storage details" : "Already Exists", entity.policy);
-
+                    if (!cndbackupStorage.HasValue || cndbackupStorage.HasValue && overwritePolicyDetails)
+                    {
+                        var result = await myDictionary.TryAddAsync(tx, entity.policy, backupStorage);
+                        ServiceEventSource.Current.ServiceMessage(this.Context, result ? "Successfully added policy {0} storage details" : "Could not add policy", entity.policy);
+                    }
+                    else
+                    {
+                        ServiceEventSource.Current.ServiceMessage(this.Context, "Policy {0} already exists", entity.policy);
+                    }
+                    
                     // If an exception is thrown before calling CommitAsync, the transaction aborts, all changes are 
                     // discarded, and nothing is saved to the secondary replicas.
                     await tx.CommitAsync();

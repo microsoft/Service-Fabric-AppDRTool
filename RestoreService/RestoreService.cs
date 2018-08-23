@@ -213,7 +213,8 @@ namespace RestoreService
         public async Task ConfigureApplication(string application, List<PolicyStorageEntity> policyDetails, ClusterDetails primaryCluster, ClusterDetails secondaryCluster)
         {
             IPolicyStorageService policyStorageClient = ServiceProxy.Create<IPolicyStorageService>(new Uri("fabric:/SFAppDRTool/PolicyStorageService"));
-            bool stored = policyStorageClient.PostStorageDetails(policyDetails, primaryCluster.httpEndpoint, primaryCluster.certificateThumbprint).GetAwaiter().GetResult();
+            bool overwritePolicyDetails = false;
+            bool stored = policyStorageClient.PostStorageDetails(policyDetails, primaryCluster.httpEndpoint, primaryCluster.certificateThumbprint, overwritePolicyDetails).GetAwaiter().GetResult();
             await MapPartitionsOfApplication(new Uri(application), primaryCluster, secondaryCluster, "partitionDictionary");
             IReliableDictionary<String, List<String>> configuredApplicationsDictionary = await this.StateManager.GetOrAddAsync<IReliableDictionary<String, List<String>>>("configuredApplicationsDictionary");
             using (var tx = this.StateManager.CreateTransaction())
@@ -296,7 +297,8 @@ namespace RestoreService
         public async Task ConfigureService(String applicationName, String serviceName, List<PolicyStorageEntity> policyDetails, ClusterDetails primaryCluster, ClusterDetails secondaryCluster)
         {
             IPolicyStorageService policyStorageClient = ServiceProxy.Create<IPolicyStorageService>(new Uri("fabric:/SFAppDRTool/PolicyStorageService"));
-            bool stored = await policyStorageClient.PostStorageDetails(policyDetails, primaryCluster.httpEndpoint, primaryCluster.certificateThumbprint);
+            bool overwritePolicyDetails = false;
+            bool stored = await policyStorageClient.PostStorageDetails(policyDetails, primaryCluster.httpEndpoint, primaryCluster.certificateThumbprint, overwritePolicyDetails);
             await MapPartitionsOfService(new Uri(applicationName), new Uri(serviceName), primaryCluster, secondaryCluster, "partitionDictionary");
         }
 
@@ -644,7 +646,7 @@ namespace RestoreService
         public async Task<JToken> GetLatestBackupAvailable(Guid partitionId, String clusterConnnectionString, String clusterThumbprint)
         {
             string URL = clusterConnnectionString + "/";
-            string URLParameters = "Partitions/" + partitionId + "/$/GetBackups" + "?api-version=6.2-preview";
+            string URLParameters = "Partitions/" + partitionId + "/$/GetBackups" + "?api-version=6.2-preview" + "&Latest=true";
 
             HttpResponseMessage response = await Utility.HTTPGetAsync(URL, URLParameters, clusterThumbprint);
             if (response.IsSuccessStatusCode)

@@ -15,12 +15,11 @@
                     <button class="button success rounded large" style="width : 100%;" ng-click="getAppsOnSelectedCluster(clusterCombination)">{{clusterCombination.item1.address}} –– {{clusterCombination.item2.address}}</button>
                 </div>
             </div>
-
-            <h2 class="text-center">Connect to new clusters:</h2>
         </div>
 
         <form>
-            <div style="margin-top: 70px;">
+            <div style="margin-top: 50px;">
+                <h2 style="margin-bottom: 20px;" ng-if="clusterCombinations.length > 0" class="text-center">Connect to new clusters:</h2>
                 <div style="width: 45%; float: left; margin-right: 30px;">
                     <h2>Primary Cluster</h2>
                     <div class="form-group">
@@ -35,7 +34,7 @@
                     </div>
                     <div class="form-group">
                         <label>Primary Cluster HTTP endpoint</label>
-                        <input type="text" placeholder="localhost" 
+                        <input type="text" placeholder="localhost"
                                ng-model="primaryClusterHTTPEndpoint"
                                data-role="hint"
                                data-hint-position="left"

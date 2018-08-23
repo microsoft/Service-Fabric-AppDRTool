@@ -43,7 +43,7 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
     var errorCount = 0, //Counter for the server errors
         loadPromise; //Pointer to the promise created by the Angular $timout service
 
-    $rootScope.refreshRate = 10 * 1000; // Load the data every 10 seconds
+    $rootScope.refreshRate = 30 * 1000; // Init load the data every 30 seconds
 
     $scope.updateRefreshRate = function (val) {
         $rootScope.refreshRate = val * 1000;
@@ -226,6 +226,12 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
 
         for (var i = 0; i < policiesList.length; i++) {
             var policy = policiesList[i];
+            
+            var index = $rootScope.storedPolicies.indexOf(policy.policy);
+            if (index > -1) {
+                return true;
+            }
+
             if (policy.backupStorage.storageKind == 'AzureBlobStore') {
                 var cs = policy.backupStorage.connectionString;
                 if (cs == "" || cs == "****") {
@@ -300,7 +306,7 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
         }
 
         $http.post('api/RestoreService/configureservice/' + $rootScope.primaryClusterEndpoint + '/' + $rootScope.primaryClusterHTTPEndpoint.replace("//", "__") + '/' + $rootScope.primaryClusterThumbprint + '/' + $rootScope.primaryClusterCommonName + '/'
-            + $rootScope.secondaryClusterEndpoint.replace("//", "__") + '/' + $rootScope.secondaryClusterHTTPEndpoint.replace("//", "__") + '/' + $rootScope.secondaryClusterThumbprint + '/' + $rootScope.secondaryClusterCommonName, content)
+            + $rootScope.secondaryClusterEndpoint + '/' + $rootScope.secondaryClusterHTTPEndpoint.replace("//", "__") + '/' + $rootScope.secondaryClusterThumbprint + '/' + $rootScope.secondaryClusterCommonName, content)
             .then(function (data, status) {
                 for (var i = 0; i < $scope.appsData[$rootScope.appNameServ].length; i++) {
                     if ($scope.appsData[$rootScope.appNameServ][i][0] == $rootScope.currentServicename) {
@@ -679,7 +685,6 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
         $scope.primaryCommonName = primaryCluster.commonName;
         $scope.secondaryCommonName = secondaryCluster.commonName;
         $scope.getAppsOnPrimaryCluster();
-        //angular.element('#clusterConfigButton').triggerHandler('click');
     }
 
     $scope.getStoredPolicies = function () {

@@ -40,10 +40,14 @@ app.run(['$templateCache', function ($templateCache) {
 
 app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$timeout', '$location', '$window', '$route', '$uibModal', function ($rootScope, $scope, $http, $timeout, $location, $window, $route, $uibModal) {
 
-    var loadTime = 10000, //Load the data every 2 seconds
-        errorCount = 0, //Counter for the server errors
+    var errorCount = 0, //Counter for the server errors
         loadPromise; //Pointer to the promise created by the Angular $timout service
 
+    $rootScope.refreshRate = 10 * 1000; // Load the data every 10 seconds
+
+    $scope.updateRefreshRate = function (val) {
+        $rootScope.refreshRate = val * 1000;
+    };
 
     // This will be called whenever the page is refreshed
     $scope.refresh = function () {
@@ -79,12 +83,14 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
                     $rootScope.showConfiguredApps = false;
 
                 errorCount = 0;
-                $rootScope.statusLoadingFlag = false;
+                $timeout(function () {
+                    $rootScope.statusLoadingFlag = false;
+                }, 2000);
                 nextLoad();     //Calls the next load
 
             }, function (data, status) {
                 $rootScope.statusLoadingFlag = false;
-                nextLoad(++errorCount * 2 * loadTime);   // If current request fails next load will be delayed
+                nextLoad(++errorCount * 2 * $rootScope.refreshRate);   // If current request fails next load will be delayed
             });
     };
 
@@ -148,6 +154,7 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
     };
 
     var nextLoad = function (mill) {
+        var loadTime = $rootScope.refreshRate;
         mill = mill || loadTime;
 
         //Always make sure the last timeout is cleared before starting a new one

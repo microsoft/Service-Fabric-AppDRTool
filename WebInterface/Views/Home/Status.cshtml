@@ -5,119 +5,28 @@
 
         <div>
             <h2 style="margin-right: 15px; display: inline !important; float: left;">Backup Status</h2>
-            <div ng-if="statusLoadingFlag" style="margin-top: 0px; display: inline !important; float: left; width: 33%;" data-role="activity" data-type="ring" data-style="dark"></div>
+            <div data-role="hint"
+                 data-hint-text="Refresh Rate"
+                 style="display: inline !important; float: left; padding-top: 6px;">
+                <input data-role="slider"
+                       class="ultra-thin"
+                       data-hint-mask="$1s"
+                       data-hint-always="true"
+                       ng-change="updateRefreshRate(refreshRateVal)"
+                       ng-model="refreshRateVal"
+                       data-value="30"
+                       data-min="2" data-max="60"
+                       data-size="200"
+                       />
+            </div>
+            <div ng-if="statusLoadingFlag" style="padding-left: 10px; margin-top: 0px; display: inline !important; float: left; width: 33%;" data-role="activity" data-type="ring" data-style="dark"></div>
+            <div style="clear: both;"></div>
         </div>
-        <!-- <table class="table row-hower row-border" style="width:100%;">
-        <thead>
-            <tr>
-                <th class="sortable-column">ApplicationName</th>
-                <th class="sortable-column">ServiceName</th>
-                <th class="sortable-column">Primary Cluster</th>
-                <th class="sortable-column">Primary PartitionId</th>
-                <th class="sortable-column">SecondaryCluster</th>
-                <th class="sortable-column">Secondary PartitionId</th>
-                <th class="sortable-column">Last Backup Restored</th>
-                <th class="sortable-column">Currently Under Restore</th>
-                <th class="sortable-column">Latest Backup available</th>
-                <th class="sortable-column">Restore Status</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr ng-repeat="partitionStatus in partitionsStatus"
-                ng-class="{'dark': partitionStatus.restoreState == 'Accepted',
-                           'primary': partitionStatus.restoreState == 'Success',
-                           'yellow': partitionStatus.restoreState == 'RestoreInProgress',
-                           'alert': partitionStatus.restoreState == 'Failure' || partitionStatus.restoreState == 'Invalid' || partitionStatus.restoreState == 'Timeout' }">
-                <td>{{partitionStatus.applicationName}}</td>
-                <td>{{partitionStatus.serviceName}}</td>
-                <td>{{partitionStatus.primaryCluster.address}}</td>
-                <td>{{partitionStatus.primaryPartitionId}}</td>
-                <td>{{partitionStatus.secondaryCluster.address}}</td>
-                <td>{{partitionStatus.partitionId}}</td>
-                <td>{{partitionStatus.lastBackupRestored.backupTime}}({{partitionStatus.lastBackupRestored.backupId}})</td>
-                <td>{{partitionStatus.currentlyUnderRestore.backupTime}}({{partitionStatus.currentlyUnderRestore.backupId}})</td>
-                <td>{{partitionStatus.latestBackupAvailable.backupTime}}({{partitionStatus.latestBackupAvailable.backupId}})</td>
-                <td>{{partitionStatus.restoreState}}</td>
-            </tr>
-            <tr class="dark">
-                <td>Application 1</td>
-                <td>Stateful Service 1</td>
-                <td>vibha-test1.southindia.cloudapp.azure.com:19000</td>
-                <td>1daae3f5-7fd6-42e9-b1ba-8c05f873994d</td>
-                <td>vibha-test1.southindia.cloudapp.azure.com:19000</td>
-                <td>1daae3f5-7fd6-42e9-b1ba-8c05f873994d</td>
-                <td>2018-08-06T10:03:35Z(a310982c-4d12-4999-b773-ae2f8b69bea7)</td>
-                <td>2018-08-06T10:03:35Z(a310982c-4d12-4999-b773-ae2f8b69bea7)</td>
-                <td>2018-08-06T10:03:35Z(a310982c-4d12-4999-b773-ae2f8b69bea7)</td>
-                <td>Accepted</td>
-            </tr>
-            <tr class="dark">
-                <td>Application 1</td>
-                <td>Stateful Service 1</td>
-                <td>vibha-test1.southindia.cloudapp.azure.com:19000</td>
-                <td>1daae3f5-7fd6-42e9-b1ba-8c05f873994d</td>
-                <td>vibha-test1.southindia.cloudapp.azure.com:19000</td>
-                <td>1daae3f5-7fd6-42e9-b1ba-8c05f873994d</td>
-                <td>2018-08-06T10:03:35Z(a310982c-4d12-4999-b773-ae2f8b69bea7)</td>
-                <td>2018-08-06T10:03:35Z(a310982c-4d12-4999-b773-ae2f8b69bea7)</td>
-                <td>2018-08-06T10:03:35Z(a310982c-4d12-4999-b773-ae2f8b69bea7)</td>
-                <td>Accepted</td>
-            </tr>
-            <tr class="primary">
-                <td>Application 1</td>
-                <td>Stateful Service 1</td>
-                <td>vibha-test1.southindia.cloudapp.azure.com:19000</td>
-                <td>1daae3f5-7fd6-42e9-b1ba-8c05f873994d</td>
-                <td>vibha-test1.southindia.cloudapp.azure.com:19000</td>
-                <td>1daae3f5-7fd6-42e9-b1ba-8c05f873994d</td>
-                <td>2018-08-06T10:03:35Z(a310982c-4d12-4999-b773-ae2f8b69bea7)</td>
-                <td>2018-08-06T10:03:35Z(a310982c-4d12-4999-b773-ae2f8b69bea7)</td>
-                <td>2018-08-06T10:03:35Z(a310982c-4d12-4999-b773-ae2f8b69bea7)</td>
-                <td>Success</td>
-            </tr>
-            <tr class="yellow">
-                <td>Application 2</td>
-                <td>Stateful Service 2</td>
-                <td>vibha-test1.southindia.cloudapp.azure.com:19000</td>
-                <td>1daae3f5-7fd6-42e9-b1ba-8c05f873994d</td>
-                <td>vibha-test1.southindia.cloudapp.azure.com:19000</td>
-                <td>1daae3f5-7fd6-42e9-b1ba-8c05f873994d</td>
-                <td>2018-08-06T10:03:35Z(a310982c-4d12-4999-b773-ae2f8b69bea7)</td>
-                <td>2018-08-06T10:03:35Z(a310982c-4d12-4999-b773-ae2f8b69bea7)</td>
-                <td>2018-08-06T10:03:35Z(a310982c-4d12-4999-b773-ae2f8b69bea7)</td>
-                <td>RestoreInProgress</td>
-            </tr>
-            <tr class="primary">
-                <td>Application 1</td>
-                <td>Stateful Service 1</td>
-                <td>vibha-test1.southindia.cloudapp.azure.com:19000</td>
-                <td>1daae3f5-7fd6-42e9-b1ba-8c05f873994d</td>
-                <td>vibha-test1.southindia.cloudapp.azure.com:19000</td>
-                <td>1daae3f5-7fd6-42e9-b1ba-8c05f873994d</td>
-                <td>2018-08-06T10:03:35Z(a310982c-4d12-4999-b773-ae2f8b69bea7)</td>
-                <td>2018-08-06T10:03:35Z(a310982c-4d12-4999-b773-ae2f8b69bea7)</td>
-                <td>2018-08-06T10:03:35Z(a310982c-4d12-4999-b773-ae2f8b69bea7)</td>
-                <td>Success</td>
-            </tr>
-            <tr class="alert">
-                <td>Application 2</td>
-                <td>Stateful Service 3</td>
-                <td>vibha-test1.southindia.cloudapp.azure.com:19000</td>
-                <td>1daae3f5-7fd6-42e9-b1ba-8c05f873994d</td>
-                <td>vibha-test1.southindia.cloudapp.azure.com:19000</td>
-                <td>1daae3f5-7fd6-42e9-b1ba-8c05f873994d</td>
-                <td>2018-01-01T09:00:55Z</td>
-                <td>2018-01-01T09:00:55Z</td>
-                <td>2018-01-01T09:00:55Z</td>
-                <td>Failure</td>
-            </tr>
-        </tbody>
-    </table> -->
         <div style="clear: both;"></div>
         <div style="width: 100%">
             <h3 ng-if="applicationsServicesStatusKeys.length > 0">Applications: </h3>
             <div ng-if="applicationsServicesStatusKeys.length == 0"
-                ng-init="gotoconfigfromstatus()"></div>
+                 ng-init="gotoconfigfromstatus()"></div>
             <div ng-repeat="appName in applicationsServicesStatusKeys">
                 <div data-role="panel"
                      data-title-caption="<h4>{{appName}}</h4>"

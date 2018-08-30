@@ -59,13 +59,7 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
                     return;
                 }
 
-                console.log("Calling from status function");
-                console.log($rootScope.partitionsStatus);
-
                 $scope.transformPartitionsStatus();
-
-                console.log("Transformed partitions status..");
-                console.log($rootScope.applicationsServicesStatus);
 
                 var appsConfigured = [];
 
@@ -169,16 +163,11 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
     $scope.configureApplication = function () {
 
         var applicationName = $rootScope.currentAppname;
-        console.log("Calling from configure application");
-        console.log(applicationName);
-
         var contentData = {};
-        contentData.PoliciesList = $scope.apppolicies;
-        // TODO validate policies and update the configured services in UI by making them green
-        contentData.ApplicationList = [applicationName]; // Make sure this fabric:/applicationName
 
-        console.log("Calling from configureApplication");
-        console.log(contentData);
+        contentData.PoliciesList = $scope.apppolicies;
+        contentData.ApplicationList = [applicationName];
+
         var content = JSON.stringify(contentData);
 
         if (!$scope.validatePolicies(contentData)) {
@@ -189,8 +178,6 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
         $http.post('api/RestoreService/configureapp/' + $rootScope.primaryClusterEndpoint + '/' + $rootScope.primaryClusterHTTPEndpoint.replace("//", "__") + '/' + $rootScope.primaryClusterThumbprint + '/' + $rootScope.primaryClusterCommonName + '/'
             + $rootScope.secondaryClusterEndpoint + '/' + $rootScope.secondaryClusterHTTPEndpoint.replace("//", "__") + '/' + $rootScope.secondaryClusterThumbprint + '/' + $rootScope.secondaryClusterCommonName, content)
             .then(function (data, status) {
-                console.log("Calling success function");
-                console.log($scope.appsData);
                 $scope.appsStatusData[applicationName] = "Configured"; 
                 for (var i = 0; i < $scope.appsData[applicationName].length; i++) {
                     if ($scope.appsData[applicationName][i][1] == "NotConfigured") {
@@ -264,22 +251,16 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
     $scope.configureService = function () {
 
         var serviceName = $rootScope.currentServicename;
-        console.log("Calling from configure service");
-        console.log(serviceName);
 
         var names = serviceName.split('/');
         names.pop();
         var appName = names.join('/');
-        console.log("App name is " + appName);
         $rootScope.appNameServ = appName;
 
         var contentData = {};
         contentData.PoliciesList = $scope.policies;
-        // TODO validate policies and update the configured services in UI by making them green
-        contentData.ServiceList = [appName, serviceName]; // Make sure this fabric:/applicationName/serviceName
+        contentData.ServiceList = [appName, serviceName];
 
-        console.log("Calling from configureApplication");
-        console.log(contentData);
         var content = JSON.stringify(contentData);
 
         if (!$scope.validatePolicies(contentData)) {
@@ -307,7 +288,6 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
         var names = serviceName.split('/');
         names.pop();
         var appName = names.join('/');
-        console.log("App name is " + appName);
         $rootScope.appNameServ = appName;
 
         var contentData = {};
@@ -340,7 +320,6 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
     };
 
     $scope.editPolicyOfApp = function (policyName) {
-        console.log("In editPolicyOfApp");
         $rootScope.currentPolicyUnderEdit = policyName;
         $rootScope.appPolicyEditFlag = true;
         var index = $rootScope.storedPolicies.indexOf(policyName);
@@ -350,7 +329,6 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
     }
 
     $scope.saveEditPolicyOfApp = function () {
-        console.log("In saveEditPolicyOfApp");
         var policyName = $rootScope.currentPolicyUnderEdit;
         var contentData = {};
         var policyInd = -1;
@@ -443,11 +421,9 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
 
         serviceN = serviceName.replace("fabric:/", "");
         serviceN = serviceN.replace("/", "_");
-        console.log("The service name is " + serviceN);
         clusterEndp = $rootScope.primaryClusterHTTPEndpoint;
         clusterEndp = clusterEndp.replace("//", "__");
         clusterThumbprint = $rootScope.primaryClusterThumbprint;
-        console.log("The cluster name is " + clusterEndp);
         Metro.dialog.open('#policyConfigModal');
         $rootScope.serviceConfigLoad = true;
         $rootScope.serviceNoPolicyFoundFlag = false;
@@ -456,7 +432,6 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
         $http.get('api/RestoreService/servicepolicies/' + clusterEndp + '/' + clusterThumbprint + '/' + serviceN)
             .then(function (data, status) {
                 $scope.policies = data.data;
-                console.log($scope.policies);
                 $rootScope.policies = $scope.policies;
                 $rootScope.serviceConfigLoad = false;
             }, function (data, status) {
@@ -473,9 +448,6 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
             .then(function (data, status) {
                 $scope.storedPolicies = data.data;
                 $rootScope.storedPolicies = $scope.storedPolicies;
-                console.log("Stored policies are..");
-                console.log($rootScope.storedPolicies);
-
                 $scope.openAppPolicyModal(appName, appStatus);
 
             }, function (data, status) {
@@ -486,11 +458,6 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
 
     $scope.openAppPolicyModal = function (appName, appStatus) {
         $scope.getStoredPolicies();
-        console.log("Inside openAppPolicyModal..");
-        console.log("openAppPolicyModal storedPolicies are");
-        console.log($rootScope.storedPolicies);
-        console.log("end openAppPolicyModal");
-
         $rootScope.currentAppname = appName;
         $rootScope.appPolicyEditFlag = false;
         $rootScope.appDisableFlag = false;
@@ -510,9 +477,7 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
         $rootScope.apppolicies = undefined;
         $http.get('api/RestoreService/apppolicies/' + clusterEndp + '/' + clusterThumbprint + '/' + appNameN)
             .then(function (data, status) {
-                console.log("In function openAppPolicyModal");
                 $scope.apppolicies = data.data;
-                console.log($scope.apppolicies);
                 $rootScope.apppolicies = $scope.apppolicies;
                 $rootScope.appConfigLoad = false;
             }, function (data, status) {
@@ -524,7 +489,6 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
     }
 
     $scope.getServiceConfigModal = function () {
-        console.log("getServiceConfigModal was called");
         $location.path("/servConfig");
     }
 
@@ -603,9 +567,6 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
                 $rootScope.appsData = $scope.appsData;
                 $rootScope.appsKeys = $scope.appsKeys;
                 $rootScope.appsStatusData = $scope.appsStatusData;
-                console.log($scope.appsStatusData);
-                console.log($scope.appsData);
-                console.log($scope.appsKeys);
                 $scope.getStoredPolicies();
             }, function (data, status) {
                 $scope.apps = undefined;
@@ -621,7 +582,7 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
             $rootScope.primaryClusterThumbprint == "" ||
             $rootScope.primaryClusterCommonName == "" ||
             !$rootScope.secondaryClusterEndpoint ||
-            !$rootScope.primaryClusterEndpoint.includes(":") ||
+            !$rootScope.secondaryClusterEndpoint.includes(":") ||
             !$rootScope.secondaryClusterHTTPEndpoint.includes("http") ||
             $rootScope.secondaryClusterThumbprint == "" ||
             $rootScope.secondaryClusterCommonName == "") {
@@ -685,8 +646,6 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
             .then(function (data, status) {
                 $scope.storedPolicies = data.data;
                 $rootScope.storedPolicies = $scope.storedPolicies;
-                console.log("Stored policies are..");
-                console.log($rootScope.storedPolicies);
             }, function (data, status) {
                 $scope.storedPolicies = undefined;
                 runToast('Could not load all stored policies. Please try again.', 'alert');

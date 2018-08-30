@@ -31,7 +31,7 @@ namespace RestoreService
 
         private System.Threading.Timer timer;
 
-        long periodTimeSpan = 30000;
+        long periodTimeSpan = 300000;
 
         public RestoreService(StatefulServiceContext context)
             : base(context)

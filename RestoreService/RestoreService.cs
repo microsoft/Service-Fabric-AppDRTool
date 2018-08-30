@@ -486,8 +486,8 @@ namespace RestoreService
         // Maps the paritions of the applications from primary cluster and secondary cluster
         public async Task MapPartitionsOfApplication(Uri applicationName, ClusterDetails primaryCluster, ClusterDetails secondaryCluster, String partitionDictionaryName)
         {
-            FabricClient primaryFabricClient = GetSecureFabricClient(primaryCluster.clientConnectionEndpoint, primaryCluster.certificateThumbprint, primaryCluster.commonName);
-            FabricClient secondaryFabricClient = GetSecureFabricClient(secondaryCluster.clientConnectionEndpoint, secondaryCluster.certificateThumbprint, secondaryCluster.commonName);
+            FabricClient primaryFabricClient = Utility.GetFabricClient(primaryCluster.clientConnectionEndpoint, primaryCluster.certificateThumbprint, primaryCluster.commonName);
+            FabricClient secondaryFabricClient = Utility.GetFabricClient(secondaryCluster.clientConnectionEndpoint, secondaryCluster.certificateThumbprint, secondaryCluster.commonName);
 
             ServiceList services = await primaryFabricClient.QueryManager.GetServiceListAsync(applicationName);
             foreach(Service service in services)
@@ -524,30 +524,12 @@ namespace RestoreService
 
         public async Task MapPartitionsOfService(Uri applicationName, Uri serviceName, ClusterDetails primaryCluster, ClusterDetails secondaryCluster, String partitionDictionaryName)
         {
-            FabricClient primaryFabricClient = GetSecureFabricClient(primaryCluster.clientConnectionEndpoint, primaryCluster.certificateThumbprint, primaryCluster.commonName);
-            FabricClient secondaryFabricClient = GetSecureFabricClient(secondaryCluster.clientConnectionEndpoint, secondaryCluster.certificateThumbprint, secondaryCluster.commonName);
+            FabricClient primaryFabricClient = Utility.GetFabricClient(primaryCluster.clientConnectionEndpoint, primaryCluster.certificateThumbprint, primaryCluster.commonName);
+            FabricClient secondaryFabricClient = Utility.GetFabricClient(secondaryCluster.clientConnectionEndpoint, secondaryCluster.certificateThumbprint, secondaryCluster.commonName);
 
             ServicePartitionList primaryPartitions = await primaryFabricClient.QueryManager.GetPartitionListAsync(serviceName);
             ServicePartitionList secondaryPartitions = await secondaryFabricClient.QueryManager.GetPartitionListAsync(serviceName);
             await MapPartitions(applicationName, serviceName, primaryCluster, primaryPartitions, secondaryCluster, secondaryPartitions, partitionDictionaryName);
-        }
-
-        public static FabricClient GetSecureFabricClient(string connectionEndpoint, string thumbprint, string cname)
-        {
-            var xc = Utility.GetCredentials(thumbprint, thumbprint, cname);
-
-            FabricClient fc;
-
-            try
-            {
-                fc = new FabricClient(xc, connectionEndpoint);
-                return fc;
-            }
-            catch (Exception e)
-            {
-                ServiceEventSource.Current.Message("Web Service: Exception while trying to connect securely: {0}", e);
-                throw;
-            }
         }
 
         public async Task MapPartitions(Uri applicationName, Uri serviceName, ClusterDetails primaryCluster, ServicePartitionList partitionsInPrimary, ClusterDetails secondaryCluster,ServicePartitionList partitionsInSecondary, string partitionDictionaryName)

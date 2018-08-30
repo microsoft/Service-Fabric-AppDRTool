@@ -29,10 +29,18 @@ namespace WebInterface.Controllers
         [Route("apps/{primarycs}/{primaryThumbprint}/{primarycname}/{secondarycs}/{secondaryThumbprint}/{secondarycname}")]
         public async Task<IActionResult> GetApplications(String primarycs, String primaryThumbprint, String primarycname, String secondarycs, String secondaryThumbprint, String secondarycname)
         {
-            Dictionary<String, List<List<String>>> applicationsServicesMap = new Dictionary<String, List< List<String> >>();
+            FabricClient primaryfc = Utility.GetFabricClient(primarycs, primaryThumbprint, primarycname);
+            FabricClient secondaryfc = Utility.GetFabricClient(secondarycs, secondaryThumbprint, secondarycname);
 
-            FabricClient primaryfc = GetSecureFabricClient(primarycs, primaryThumbprint, primarycname);
-            FabricClient secondaryfc = GetSecureFabricClient(secondarycs, secondaryThumbprint, secondarycname);
+            var applicationsServicesMap = await GetApplicationsServices(primaryfc, primarycs, secondaryfc, secondarycs);
+
+            return this.Json(applicationsServicesMap);
+
+        }
+
+        public async Task<Dictionary<String, List<List<String>>>> GetApplicationsServices(FabricClient primaryfc, String primarycs, FabricClient secondaryfc, String secondarycs)
+        {
+            Dictionary<String, List<List<String>>> applicationsServicesMap = new Dictionary<String, List<List<String>>>();
 
             FabricClient.QueryClient queryClient = primaryfc.QueryManager;
             ApplicationList appsList = await queryClient.GetApplicationListAsync();
@@ -74,7 +82,7 @@ namespace WebInterface.Controllers
                 {
                     applicationStatus = "Configured";
                 }
-                
+
                 List<List<String>> serviceList = new List<List<String>>();
                 List<String> appStatusList = new List<String>();
 
@@ -124,8 +132,8 @@ namespace WebInterface.Controllers
                 applicationsServicesMap.Add(applicationName, serviceList);
             }
 
-            return this.Json(applicationsServicesMap);
 
+            return applicationsServicesMap;
         }
 
         [HttpGet]
@@ -134,24 +142,6 @@ namespace WebInterface.Controllers
         {
             List<string> policiesList = await GetStoredPolicies();
             return this.Json(policiesList);
-        }
-
-        public static FabricClient GetSecureFabricClient(string connectionEndpoint, string thumbprint, string cname)
-        {
-            var xc = Utility.GetCredentials(thumbprint, thumbprint, cname);
-
-            FabricClient fc;
-
-            try
-            {
-                fc = new FabricClient(xc, connectionEndpoint);
-                return fc;
-            }
-            catch (Exception e)
-            {
-                ServiceEventSource.Current.Message("Web Service: Exception while trying to connect securely: {0}", e);
-                throw;
-            }
         }
 
         private async Task<PolicyStorageEntity> getPolicyDetails(string httpConnectionString, string thumbprint, string policyName)

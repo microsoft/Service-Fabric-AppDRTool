@@ -100,7 +100,7 @@ namespace RestoreService
         {
             HttpClient client;
 
-            if (URL.Contains("https://") && certThumbprint != null)
+            if (URL.Contains("https://") && certThumbprint != null && certThumbprint != "NotExist")
             {
                 X509Certificate2 clientCert = GetClientCertificate(certThumbprint);
                 WebRequestHandler requestHandler = new WebRequestHandler();
@@ -136,7 +136,7 @@ namespace RestoreService
         {
             HttpClient client;
 
-            if (URL.Contains("https://") && certThumbprint != null)
+            if (URL.Contains("https://") && certThumbprint != null && certThumbprint != "NotExist")
             {
                 X509Certificate2 clientCert = GetClientCertificate(certThumbprint);
                 WebRequestHandler requestHandler = new WebRequestHandler();
@@ -216,6 +216,33 @@ namespace RestoreService
         private static bool MyRemoteCertificateValidationCallback(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
         {
             return true;
+        }
+
+        public static FabricClient GetFabricClient(string connectionEndpoint, string thumbprint = null, string cname = null)
+        {
+
+            FabricClient fc;
+
+            try
+            {
+                if (thumbprint != null && cname != null && thumbprint != "NotExist" && cname != "NotExist")
+                {
+                    var xc = GetCredentials(thumbprint, thumbprint, cname);
+                    fc = new FabricClient(xc, connectionEndpoint);
+                }
+                else
+                {
+                    fc = new FabricClient(connectionEndpoint);
+                }
+
+                return fc;
+            }
+
+            catch (Exception e)
+            {
+                throw;
+            }
+            
         }
     }
 }

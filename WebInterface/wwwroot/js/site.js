@@ -1,5 +1,4 @@
-﻿// Write your JavaScript code.
-var app = angular.module('SFAppDRTool', ['ngRoute', 'ui.bootstrap']);
+﻿var app = angular.module('SFAppDRTool', ['ngRoute', 'ui.bootstrap']);
 
 runToast = function (text, displayClass) {
     var toast = Metro.toast.create;
@@ -166,23 +165,6 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
     $scope.$on('$destroy', function () {
         cancelNextLoad();
     });
-
-    $scope.configure = function () {
-
-        var contentData = {};
-        contentData.PoliciesList = $scope.policies;
-        contentData.ApplicationsList = $rootScope.selectedApps;
-
-        var content = JSON.stringify(contentData);
-
-        $http.post('api/RestoreService/configure/' + $rootScope.pc + '/' + $rootScope.sc + '/' + $rootScope.php + '/' + $rootScope.shp, content)
-            .then(function (data, status) {
-                window.alert("Applications Successfully configured");
-            }, function (data, status) {
-                window.alert("Applications not configured. Try again");
-            });
-        $scope.cancel(true);
-    };
 
     $scope.configureApplication = function () {
 
@@ -573,7 +555,6 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
         $rootScope.appsKeys = undefined;
         $rootScope.appsData = undefined;
 
-
         $rootScope.primaryClusterEndpoint = $scope.primaryClusterEndpoint;
         $rootScope.secondaryClusterEndpoint = $scope.secondaryClusterEndpoint;
 
@@ -585,6 +566,16 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
 
         $rootScope.primaryClusterCommonName = $scope.primaryCommonName;
         $rootScope.secondaryClusterCommonName = $scope.secondaryCommonName;
+
+        if ($scope.primaryClusterHTTPEndpoint.includes("http://")) {
+            $rootScope.primaryClusterThumbprint = "NotExist";
+            $rootScope.primaryClusterCommonName = "NotExist";
+        }
+
+        if ($scope.secondaryClusterHTTPEndpoint.includes("http://")) {
+            $rootScope.secondaryClusterThumbprint = "NotExist";
+            $rootScope.secondaryClusterCommonName = "NotExist"
+        }
 
         if (!$scope.validateClusterDetails()) {
             runToast("Please ensure that you have entered all the details to connect to clusters. Try again.", "alert");

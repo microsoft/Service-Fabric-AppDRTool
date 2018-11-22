@@ -144,10 +144,12 @@ namespace WebInterface.Controllers
             return this.Json(policiesList);
         }
 
-        private async Task<PolicyStorageEntity> getPolicyDetails(string httpConnectionString, string thumbprint, string policyName)
+        private async Task<PolicyStorageEntity> GetPolicyDetails(string httpConnectionString, string thumbprint, string policyName)
         {
-            PolicyStorageEntity policyStorageEntity = new PolicyStorageEntity();
-            policyStorageEntity.policy = policyName;
+            PolicyStorageEntity policyStorageEntity = new PolicyStorageEntity
+            {
+                policy = policyName
+            };
             string URL = httpConnectionString + "/";
             string URLParameters = "BackupRestore/BackupPolicies/" + policyName + "?api-version=6.2-preview";
 
@@ -202,7 +204,7 @@ namespace WebInterface.Controllers
 
             foreach (string policyName in policyNames)
             {
-                PolicyStorageEntity policyStorageEntity = await this.getPolicyDetails(httpConnectionString, thumbprint, policyName);
+                PolicyStorageEntity policyStorageEntity = await this.GetPolicyDetails(httpConnectionString, thumbprint, policyName);
 
                 if (policyStorageEntity != null)
                 {
@@ -250,7 +252,7 @@ namespace WebInterface.Controllers
 
             foreach (string policyName in policyNames)
             {
-                PolicyStorageEntity policyStorageEntity = await this.getPolicyDetails(httpConnectionString, thumbprint, policyName);
+                PolicyStorageEntity policyStorageEntity = await this.GetPolicyDetails(httpConnectionString, thumbprint, policyName);
 
                 if (policyStorageEntity != null)
                 {

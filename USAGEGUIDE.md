@@ -1,7 +1,7 @@
 
-# Usage Guide for Service Fabric Application Disaster Recovery Tool
+# Usage Guide for Service Fabric Application DR Tool
 
-How to use the Service Fabric Application Disaster Recovery Tool for your cluster backup and restore scenarios.
+How to use the Service Fabric Application Disaster Recovery Tool for your cluster/applications/services backup and restore scenarios.
 
 ## Getting Started
 
@@ -14,7 +14,7 @@ The landing page will ask you for the details of the clusters you want to use th
  - **Secondary Cluster**: The cluster which periodically restores the backups from the primary on itself, this cluster acts as the restorer and can be used in the event of loss of primary as primary.
 
 Enter these details such as:
- - **Primary/Secondary Cluster endpoint**: The endpoint to connect to your cluster.
+ - **Primary/Secondary Cluster endpoint**: The TCP client endpoint to connect to your cluster.
  - **Primary/Secondary Cluster HTTP endpoint**: The HTTP endpoint to connect to your cluster.
  - **Secure Thumbprint**: Thumbprint of the certificate needed to connect to your secure cluster. Not needed in the case of unsecure clusters.
  - **Common Name**: Common Name of the subject of the certificate, needed to connect to your secure cluster. Not needed in the case of unsecure clusters.
@@ -41,3 +41,9 @@ This page shows you the status of the backup-restores of your applications and s
 The timer to check for new updates in status is configurable, and can be set to any time interval.
 
 Note that the status page will redirect to the initial connect page if no clusters have been configured yet.
+
+## Configuration
+
+ - Backup Policy credentials are encrypted. The key can be set at `PolicyStorageEncryptionKey` in `ApplicationParameters/Cloud.xml` for cloud deployements and similarly in `Local1Node.xml` / `Local5Node.xml` for local deployments. 
+
+ - Backup Restore happens periodically every 5 mins, scanning for new backups on primary and then restoring on secondary. The timespan can be changed in `RestoreService.cs`, via `periodTimeSpan`.

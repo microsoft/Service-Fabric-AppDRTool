@@ -32,6 +32,16 @@ This page shows all the applications running on your primary cluster. The applic
 
 When you select a application or service for disaster recovery, you will be prompted to enter the credentials for the backup policies associated for that application or service. You can also edit these credentials after you've set them, for instance, if you would want to change the credentials on a rolling basis.
 
+Backup Restore happens periodically every 5 mins, scanning for new backups on primary and then restoring on secondary. The timespan can be changed in `RestoreService.cs`, via `periodTimeSpan`.
+
+### Backup Policy credentials
+
+Backup Policy credentials are encrypted. The key can be set at `PolicyStorageEncryptionKey` in `ApplicationParameters/Cloud.xml` for cloud deployements and similarly in `Local1Node.xml` / `Local5Node.xml` for local deployments. 
+
+### Disconfigure pre-configured Applications
+
+After configuring an application or service for disaster recovery, you can select it again for disconfiguring it. Click on the now green button again and it should display the option to now disconfigure/disable it as well from disaster recovery.
+
 After you've configured all the applications or services you want for disaster recovery, click on 'Next' to follow on to the next page.
 
 ## Status of Disaster Recovery configured Applications and Services
@@ -41,9 +51,3 @@ This page shows you the status of the backup-restores of your applications and s
 The timer to check for new updates in status is configurable, and can be set to any time interval.
 
 Note that the status page will redirect to the initial connect page if no clusters have been configured yet.
-
-## Configuration
-
- - Backup Policy credentials are encrypted. The key can be set at `PolicyStorageEncryptionKey` in `ApplicationParameters/Cloud.xml` for cloud deployements and similarly in `Local1Node.xml` / `Local5Node.xml` for local deployments. 
-
- - Backup Restore happens periodically every 5 mins, scanning for new backups on primary and then restoring on secondary. The timespan can be changed in `RestoreService.cs`, via `periodTimeSpan`.

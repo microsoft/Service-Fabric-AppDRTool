@@ -9,6 +9,8 @@ Clone this repo and build and deploy this application. Then after the applicatio
 
 To run this application you also need have the Service Fabric Runtime installed.
 
+Please see the `USAGEGUIDE.md` for a manual to use the tool.
+
 ## Components
 This application consists of three components:
  - WebInterface (stateless) : The web front-end service

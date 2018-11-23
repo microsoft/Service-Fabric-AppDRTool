@@ -14,10 +14,10 @@ The landing page will ask you for the details of the clusters you want to use th
  - **Secondary Cluster**: The cluster which periodically restores the backups from the primary on itself, this cluster acts as the restorer and can be used in the event of loss of primary as primary.
 
 Enter these details such as:
- - **Primary/Secondary Cluster endpoint**: The TCP client endpoint to connect to your cluster.
- - **Primary/Secondary Cluster HTTP endpoint**: The HTTP endpoint to connect to your cluster.
- - **Secure Thumbprint**: Thumbprint of the certificate needed to connect to your secure cluster. Not needed in the case of unsecure clusters.
- - **Common Name**: Common Name of the subject of the certificate, needed to connect to your secure cluster. Not needed in the case of unsecure clusters.
+ - **Primary/Secondary Cluster endpoint**: The TCP client endpoint to connect to your cluster. For instance: `sfappdrtool.southindia.cloudapp.azure.com:19000`.
+ - **Primary/Secondary Cluster HTTP endpoint**: The HTTP endpoint to connect to your cluster. For instance: `https://sfappdrtool.southindia.cloudapp.azure.com:19080`.
+ - **Secure Thumbprint**: Thumbprint of the certificate needed to connect to your secure cluster. Not needed in the case of unsecure clusters. For instance: `ef3ddbf950a07ed96bcefb50918104a297693d12`.
+ - **Common Name**: Common Name of the subject of the certificate, needed to connect to your secure cluster. Not needed in the case of unsecure clusters. For instance: `southindia.cloudapp.azure.com`.
 
 After you've connected once to your clusters, you can select them directly when you visit the page the next time.
 

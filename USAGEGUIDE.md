@@ -1,5 +1,5 @@
 
-# Usage Guide for SF App Disaster Recovery Tool
+# Usage Guide for Service Fabric Application Disaster Recovery Tool
 
 How to use the Service Fabric Application Disaster Recovery Tool for your cluster backup and restore scenarios.
 

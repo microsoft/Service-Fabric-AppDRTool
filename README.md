@@ -9,7 +9,7 @@ Clone this repo and build and deploy this application. Then after the applicatio
 
 To run this application you also need have the Service Fabric Runtime installed.
 
-Please see the [`USAGEGUIDE.md`](../blob/master/USAGEGUIDE.md) for a guide to use the tool.
+Please see the [`USAGEGUIDE.md`](../master/USAGEGUIDE.md) for a guide to use the tool.
 
 ## Components
 This application consists of three components:

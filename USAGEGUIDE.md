@@ -23,7 +23,7 @@ After you've connected once to your clusters, you can select them directly when 
 
 Click on 'Next' to follow on to the next page.
 
-## Configure Service Fabric Cluster for Disaster Recovery
+## Configure Service Fabric Applications for Disaster Recovery
 
 This page shows all the applications running on your primary cluster. The applications can be expanded to see the services which are part of the application. The status of the applications can be seen by their colours as follows:
  - **Red**: The application or service only exists on the primary cluster and not on the secondary cluster and hence cannot be configured for disaster recovery.

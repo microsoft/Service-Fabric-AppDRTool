@@ -1,8 +1,7 @@
 ﻿var app = angular.module('SFAppDRTool', ['ngRoute', 'ui.bootstrap']);
 
 runToast = function (text, displayClass) {
-    var toast = Metro.toast.create;
-    toast(text, null, 5000, displayClass);
+    Metro.toast.init().create(text, null, 5000, displayClass);
 }
 
 app.run(function ($rootScope, $location) {
@@ -530,6 +529,12 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
 
         $rootScope.primaryClusterCommonName = $scope.primaryCommonName;
         $rootScope.secondaryClusterCommonName = $scope.secondaryCommonName;
+
+        if ($scope.primaryClusterHTTPEndpoint === undefined ||
+            $scope.secondaryClusterHTTPEndpoint === undefined) {
+            runToast("Please ensure that you have entered all the details to connect to clusters. Try again.", "alert");
+            return;
+        }
 
         if ($scope.primaryClusterHTTPEndpoint.includes("http://")) {
             $rootScope.primaryClusterThumbprint = "NotExist";

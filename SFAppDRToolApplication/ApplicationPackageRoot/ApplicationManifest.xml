@@ -28,6 +28,9 @@
   <ServiceManifestImport>
     <ServiceManifestRef ServiceManifestName="WebInterfacePkg" ServiceManifestVersion="1.0.0" />
     <ConfigOverrides />
+    <Policies>
+      <EndpointBindingPolicy EndpointRef="ServiceEndpoint3" CertificateRef="TestCert1" />
+    </Policies>
   </ServiceManifestImport>
   <ServiceManifestImport>
     <ServiceManifestRef ServiceManifestName="RestoreServicePkg" ServiceManifestVersion="1.0.0" />
@@ -55,4 +58,7 @@
       </StatefulService>
     </Service>
   </DefaultServices>
+  <Certificates>
+    <EndpointCertificate X509StoreName="MY" X509FindValue="a24c9907fb09f4bad3182217ffd0907d0758d4f3" Name="TestCert1" />
+  </Certificates>
 </ApplicationManifest>

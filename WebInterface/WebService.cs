@@ -10,6 +10,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.ServiceFabric.Services.Communication.AspNetCore;
 using Microsoft.ServiceFabric.Services.Communication.Runtime;
 using Microsoft.ServiceFabric.Services.Runtime;
+// for https
+using System.Net;
+using Microsoft.Extensions.Configuration;
+using System.Security.Cryptography.X509Certificates;
 
 namespace WebInterface
 {
@@ -31,12 +35,24 @@ namespace WebInterface
             return new ServiceInstanceListener[]
             {
                 new ServiceInstanceListener(serviceContext =>
-                    new KestrelCommunicationListener(serviceContext, "ServiceEndpoint", (url, listener) =>
+                    new KestrelCommunicationListener(serviceContext, "ServiceEndpoint3", (url, listener) =>
                     {
                         ServiceEventSource.Current.ServiceMessage(serviceContext, $"Starting Kestrel on {url}");
 
                         return new WebHostBuilder()
-                                    .UseKestrel()
+                                    .UseKestrel(opt =>
+                                    {
+                                        int port = serviceContext.CodePackageActivationContext.GetEndpoint("ServiceEndpoint3").Port;
+                                        opt.Listen(IPAddress.IPv6Any, port, listenOptions =>
+                                        {
+                                            listenOptions.UseHttps(GetCertificateFromStore());
+                                            listenOptions.NoDelay = true;
+                                        });
+                                    })
+                                    .ConfigureAppConfiguration((builderContext, config) =>
+                                    {
+                                        config.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+                                    })
                                     .ConfigureServices(
                                         services => services
                                             .AddSingleton<StatelessServiceContext>(serviceContext))
@@ -47,6 +63,22 @@ namespace WebInterface
                                     .Build();
                     }))
             };
+        }
+
+        private X509Certificate2 GetCertificateFromStore()
+        {
+            var store = new X509Store(StoreName.My, StoreLocation.LocalMachine);
+            try
+            {
+                store.Open(OpenFlags.ReadOnly);
+                var certCollection = store.Certificates;
+                var currentCerts = certCollection.Find(X509FindType.FindBySubjectDistinguishedName, "CN=localhost", false);
+                return currentCerts.Count == 0 ? null : currentCerts[0];
+            }
+            finally
+            {
+                store.Close();
+            }
         }
     }
 }

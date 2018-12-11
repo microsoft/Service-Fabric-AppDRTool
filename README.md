@@ -5,7 +5,7 @@ The Service Fabric Application Disaster Recovery Tool is a disaster recovery too
 ## Getting Started
 Ensure that you have setup your Service Fabric Clusters and have backups enabled on your primary, which is the one for which you want disaster recovery.
 
-Clone this repo and build and deploy this application. Then after the application has started, open a web browser and locate to `localhost:8787` where you can find the application landing page.
+Clone this repo and build and deploy this application. Then after the application has started, open a web browser and locate to `https://localhost:8080` where you can find the application landing page.
 
 To run this application you also need have the Service Fabric Runtime installed.
 

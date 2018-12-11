@@ -9,6 +9,8 @@ As mentioned in the [`README`](../master/README.md), ensure you have everything 
 
 ## Connect to Service Fabric Clusters
 
+![Connect to Service Fabric Clusters](../master/img/connect_to_sf_clusters.png)
+
 The landing page will ask you for the details of the clusters you want to use the tool on. There is a notion of a 'Primary Cluster' and 'Secondary Cluster', which are:
  - **Primary Cluster**: The cluster which you would want to recover in a Disaster Recovery scenario, this is the main cluster.
  - **Secondary Cluster**: The cluster which periodically restores the backups from the primary on itself, this cluster acts as the restorer and can be used as main cluster, in the event of loss of the primary cluster.

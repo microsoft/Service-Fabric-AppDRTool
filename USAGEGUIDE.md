@@ -5,7 +5,7 @@ How to use the Service Fabric Application Disaster Recovery Tool for your cluste
 
 ## Getting Started
 
-As mentioned in the [`README`](../master/README.md), ensure you have everything set up. Locate to `localhost:8787` where you can find the application landing page.
+As mentioned in the [`README`](../master/README.md), ensure you have everything set up. Locate to [`https://localhost:8080`](https://localhost:8080) where you can find the application landing page.
 
 ## Connect to Service Fabric Clusters
 

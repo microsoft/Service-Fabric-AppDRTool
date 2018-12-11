@@ -35,14 +35,14 @@ namespace WebInterface
             return new ServiceInstanceListener[]
             {
                 new ServiceInstanceListener(serviceContext =>
-                    new KestrelCommunicationListener(serviceContext, "ServiceEndpoint3", (url, listener) =>
+                    new KestrelCommunicationListener(serviceContext, "EndpointHttps", (url, listener) =>
                     {
                         ServiceEventSource.Current.ServiceMessage(serviceContext, $"Starting Kestrel on {url}");
 
                         return new WebHostBuilder()
                                     .UseKestrel(opt =>
                                     {
-                                        int port = serviceContext.CodePackageActivationContext.GetEndpoint("ServiceEndpoint3").Port;
+                                        int port = serviceContext.CodePackageActivationContext.GetEndpoint("EndpointHttps").Port;
                                         opt.Listen(IPAddress.IPv6Any, port, listenOptions =>
                                         {
                                             listenOptions.UseHttps(GetCertificateFromStore());

@@ -85,7 +85,7 @@ namespace WebInterface.Controllers
         public async Task<IActionResult> GetPolicies(String cs)
         {
             string URL = "http://" + cs + "/BackupRestore/BackupPolicies";
-            string urlParameters = "?api-version=6.2-preview";
+            string urlParameters = "?api-version=6.4";
             HttpClient client = new HttpClient
             {
                 BaseAddress = new Uri(URL)

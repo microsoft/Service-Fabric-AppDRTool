@@ -430,7 +430,7 @@ namespace RestoreService
         public async Task<String> GetPolicy(string primaryCluster, string clusterThumbprint, Guid partitionId)
         {
             string URL = primaryCluster + "/";
-            string URLParameters = "Partitions/" + partitionId + "/$/GetBackupConfigurationInfo" + "?api-version=6.2-preview";
+            string URLParameters = "Partitions/" + partitionId + "/$/GetBackupConfigurationInfo" + "?api-version=6.4";
 
 
             HttpResponseMessage response = await Utility.HTTPGetAsync(URL, URLParameters, clusterThumbprint);
@@ -456,7 +456,7 @@ namespace RestoreService
         {
 
             string URL = clusterConnectionString + "/";
-            string URLParameters = "Partitions/" + partition.partitionId + "/$/Restore" + "?api-version=6.2-preview";
+            string URLParameters = "Partitions/" + partition.partitionId + "/$/Restore" + "?api-version=6.4";
 
             BackupStorage backupStorage = await GetBackupStorageDetails(policy);
             if (backupStorage == null)
@@ -628,7 +628,7 @@ namespace RestoreService
         public async Task<JToken> GetLatestBackupAvailable(Guid partitionId, String clusterConnnectionString, String clusterThumbprint)
         {
             string URL = clusterConnnectionString + "/";
-            string URLParameters = "Partitions/" + partitionId + "/$/GetBackups" + "?api-version=6.2-preview" + "&Latest=true";
+            string URLParameters = "Partitions/" + partitionId + "/$/GetBackups" + "?api-version=6.4" + "&Latest=true";
 
             HttpResponseMessage response = await Utility.HTTPGetAsync(URL, URLParameters, clusterThumbprint);
             if (response.IsSuccessStatusCode)
@@ -659,7 +659,7 @@ namespace RestoreService
         {
 
             string URL = clusterConnectionString + "/";
-            string URLParameters = "Partitions/" + partition.partitionId + "/$/GetRestoreProgress" + "?api-version=6.2-preview";
+            string URLParameters = "Partitions/" + partition.partitionId + "/$/GetRestoreProgress" + "?api-version=6.4";
 
             HttpResponseMessage response = Utility.HTTPGetAsync(URL, URLParameters, clusterThumbprint).Result;
             if (response.IsSuccessStatusCode)

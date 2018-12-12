@@ -172,7 +172,7 @@ namespace RestoreService
         public static X509Credentials GetCredentials(string clientCertThumb, string serverCertThumb, string name)
         {
             X509Credentials xc = new X509Credentials();
-            xc.StoreLocation = StoreLocation.CurrentUser;
+            xc.StoreLocation = StoreLocation.LocalMachine;
             xc.StoreName = "My";
             xc.FindType = X509FindType.FindByThumbprint;
             xc.FindValue = clientCertThumb;
@@ -184,7 +184,7 @@ namespace RestoreService
 
         public static X509Certificate2 GetClientCertificate(String Thumbprint)
         {
-            X509Store userCaStore = new X509Store(StoreName.My, StoreLocation.CurrentUser);
+            X509Store userCaStore = new X509Store(StoreName.My, StoreLocation.LocalMachine);
             try
             {
                 userCaStore.Open(OpenFlags.ReadOnly);

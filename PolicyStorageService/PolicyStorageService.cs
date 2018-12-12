@@ -159,7 +159,7 @@ namespace PolicyStorageService
         public async Task<BackupStorage> GetStorageInfo(string policy, string primaryClusterConnectionString, string clusterThumbprint)
         {
             string URL = primaryClusterConnectionString + "/";
-            string URLParameters = "BackupRestore/BackupPolicies/" + policy + "?api-version=6.2-preview";
+            string URLParameters = "BackupRestore/BackupPolicies/" + policy + "?api-version=6.4";
 
             HttpResponseMessage response = await Utility.HTTPGetAsync(URL, URLParameters, clusterThumbprint);
 

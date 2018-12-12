@@ -151,7 +151,7 @@ namespace WebInterface.Controllers
                 policy = policyName
             };
             string URL = httpConnectionString + "/";
-            string URLParameters = "BackupRestore/BackupPolicies/" + policyName + "?api-version=6.2-preview";
+            string URLParameters = "BackupRestore/BackupPolicies/" + policyName + "?api-version=6.4";
 
             HttpResponseMessage response = await Utility.HTTPGetAsync(URL, URLParameters, thumbprint);
             if (response.IsSuccessStatusCode)
@@ -182,7 +182,7 @@ namespace WebInterface.Controllers
             string mServiceName = serviceName.Replace("_", "/");
             string URL = httpConnectionString + "/";
                 
-            string URLParameters = "Services/" + mServiceName + "/$/GetBackupConfigurationInfo" + "?api-version=6.2-preview";
+            string URLParameters = "Services/" + mServiceName + "/$/GetBackupConfigurationInfo" + "?api-version=6.4";
 
             HttpResponseMessage response = await Utility.HTTPGetAsync(URL, URLParameters, thumbprint);
             if (response.IsSuccessStatusCode)
@@ -230,7 +230,7 @@ namespace WebInterface.Controllers
             List<string> policyNames = new List<string>();
             string URL = httpConnectionString + "/";
 
-            string URLParameters = "Applications/" + appName + "/$/GetBackupConfigurationInfo" + "?api-version=6.2-preview";
+            string URLParameters = "Applications/" + appName + "/$/GetBackupConfigurationInfo" + "?api-version=6.4";
 
             HttpResponseMessage response = await Utility.HTTPGetAsync(URL, URLParameters, thumbprint);
             if (response.IsSuccessStatusCode)

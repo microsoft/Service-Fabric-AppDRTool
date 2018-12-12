@@ -23,9 +23,15 @@ Enter these details such as:
 
 After you've connected once to your clusters, you can select them directly when you visit the page the next time.
 
+![Connect to Service Fabric Clusters](../master/img/connect_to_sf_clusters_2.png)
+
 Click on 'Next' to follow on to the next page.
 
 ## Configure Service Fabric Applications for Disaster Recovery
+
+![Configure Service Fabric Applications for Disaster Recovery](../master/img/configure_sf_apps.png)
+
+![Configure Service Fabric Applications for Disaster Recovery](../master/img/configure_sf_apps2.png)
 
 This page shows all the applications running on your primary cluster. The applications can be expanded to see the services which are part of the application. The status of the applications can be seen by their colours as follows:
  - **Red**: The application or service only exists on the primary cluster and not on the secondary cluster and hence cannot be configured for disaster recovery.
@@ -47,6 +53,8 @@ After configuring an application or service for disaster recovery, you can selec
 After you've configured all the applications or services you want for disaster recovery, click on 'Next' to follow on to the next page.
 
 ## Status of Disaster Recovery configured Applications and Services
+
+![Status of Disaster Recovery configured Applications and Services](../master/img/status_of_sf_clusters.png)
 
 This page shows you the status of the backup-restores of your applications and services that are taking place. If any operations fail for any reason, that specific instance will be highlighted in red for your further investigation.
 

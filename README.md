@@ -7,7 +7,7 @@ Ensure that you have setup your Service Fabric Clusters and have backups enabled
 
 Clone this repo and build and deploy this application. Then after the application has started, open a web browser and locate to [`https://localhost:8080`](https://localhost:8080) where you can find the application landing page.
 
-To run this application you also need have the Service Fabric Runtime installed.
+To run this application you also need to have the Service Fabric Runtime installed.
 
 Please see the [`USAGEGUIDE`](../master/USAGEGUIDE.md) for a guide to use the tool.
 

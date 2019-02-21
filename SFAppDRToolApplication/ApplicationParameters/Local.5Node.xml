@@ -8,6 +8,6 @@
     <Parameter Name="RestoreService_PartitionCount" Value="1" />
     <Parameter Name="RestoreService_MinReplicaSetSize" Value="1" />
     <Parameter Name="RestoreService_TargetReplicaSetSize" Value="1" />
-    <Parameter Name="PolicyStorageEncryptionKey" Value="03ECC67BDF6C0C779FEC1B142DA2A740A91BE239" />
+    <Parameter Name="PolicyStorageCertThumbprint" Value="03ECC67BDF6C0C779FEC1B142DA2A740A91BE239" />
   </Parameters>
 </Application>

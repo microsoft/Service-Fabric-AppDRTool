@@ -8,7 +8,7 @@
     <Parameter Name="RestoreService_MinReplicaSetSize" DefaultValue="1" />
     <Parameter Name="RestoreService_PartitionCount" DefaultValue="1" />
     <Parameter Name="RestoreService_TargetReplicaSetSize" DefaultValue="1" />
-    <Parameter Name="PolicyStorageEncryptionKey" DefaultValue="" />
+    <Parameter Name="PolicyStorageCertThumbprint" DefaultValue="" />
   </Parameters>
   <!-- Import the ServiceManifest from the ServicePackage. The ServiceManifestName and ServiceManifestVersion 
        should match the Name and Version attributes of the ServiceManifest element defined in the 
@@ -19,7 +19,7 @@
       <ConfigOverride Name="Config">
         <Settings>
           <Section Name="PolicyStorageSecurityConfig">
-            <Parameter Name="PolicyStorageEncryptionKey" Value="[PolicyStorageEncryptionKey]" />
+            <Parameter Name="PolicyStorageCertThumbprint" Value="[PolicyStorageCertThumbprint]" />
           </Section>
         </Settings>
       </ConfigOverride>

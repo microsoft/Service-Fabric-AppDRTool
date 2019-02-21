@@ -20,7 +20,13 @@
                                     AzureActiveDirectory="true"
                                     ServerCertThumbprint="0123456789012345678901234567890123456789" />
   -->
-  <ClusterConnectionParameters />
+  <ClusterConnectionParameters ConnectionEndpoint="vibhabrstool2.southindia.cloudapp.azure.com:19000"
+                                    X509Credential="true"
+                                    ServerCertThumbprint="23946BC36E25F0C99A58D4C4A76CAA6A609587D4"
+                                    FindType="FindByThumbprint"
+                                    FindValue="23946BC36E25F0C99A58D4C4A76CAA6A609587D4"
+                                    StoreLocation="CurrentUser"
+                                    StoreName="My" />
   <ApplicationParameterFile Path="..\ApplicationParameters\Local.5Node.xml" />
   <CopyPackageParameters CompressPackage="true" />
 </PublishProfile>

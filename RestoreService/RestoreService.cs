@@ -31,7 +31,7 @@ namespace RestoreService
 
         private System.Threading.Timer timer;
 
-        long periodTimeSpan = 300000;
+        long periodTimeSpan = 300000; // 5 mins in ms
 
         public RestoreService(StatefulServiceContext context)
             : base(context)
@@ -64,7 +64,7 @@ namespace RestoreService
         {
             // To trigger OnTimerTick method every minute
 
-            var periodTimeSpan = TimeSpan.FromMinutes(1);
+            var periodTimeSpan = TimeSpan.FromMinutes(5);
 
             timer.Change(0, Timeout.Infinite);
 
@@ -83,7 +83,7 @@ namespace RestoreService
             }
             finally
             {
-                // Configure timer to trigger after 1 Min.
+                // Configure timer to trigger after 5 Min.
                 timer.Change(this.periodTimeSpan, Timeout.Infinite);
             }
         }
@@ -665,7 +665,7 @@ namespace RestoreService
             if (response.IsSuccessStatusCode)
             {
                 var content = response.Content.ReadAsAsync<JObject>().Result;
-                string restoreState = content["RestoreState"].ToString();
+                string restoreState = (content != null) ? content["RestoreState"].ToString() : "";
                 return restoreState;
             }
             else

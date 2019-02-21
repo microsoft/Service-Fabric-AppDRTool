@@ -8,7 +8,7 @@
     <Parameter Name="RestoreService_MinReplicaSetSize" DefaultValue="1" />
     <Parameter Name="RestoreService_PartitionCount" DefaultValue="1" />
     <Parameter Name="RestoreService_TargetReplicaSetSize" DefaultValue="1" />
-    <Parameter Name="PolicyStorageEncryptionKey" DefaultValue="" />
+    <Parameter Name="PolicyStorageCertThumbprint" DefaultValue="" />
   </Parameters>
   <!-- Import the ServiceManifest from the ServicePackage. The ServiceManifestName and ServiceManifestVersion 
        should match the Name and Version attributes of the ServiceManifest element defined in the 
@@ -19,7 +19,7 @@
       <ConfigOverride Name="Config">
         <Settings>
           <Section Name="PolicyStorageSecurityConfig">
-            <Parameter Name="PolicyStorageEncryptionKey" Value="[PolicyStorageEncryptionKey]" />
+            <Parameter Name="PolicyStorageCertThumbprint" Value="[PolicyStorageCertThumbprint]" />
           </Section>
         </Settings>
       </ConfigOverride>
@@ -59,6 +59,6 @@
     </Service>
   </DefaultServices>
   <Certificates>
-    <EndpointCertificate X509StoreName="MY" X509FindValue="a24c9907fb09f4bad3182217ffd0907d0758d4f3" Name="HttpsCert" />
+    <EndpointCertificate X509StoreName="MY" X509FindValue="23946BC36E25F0C99A58D4C4A76CAA6A609587D4" Name="HttpsCert" />
   </Certificates>
 </ApplicationManifest>

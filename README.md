@@ -9,7 +9,7 @@ Ensure that you have setup your Service Fabric clusters and have [backup restore
 You need to deploy Service Fabric application disaster recovery tool on a Service Fabric cluster. Note that the application can be deployed on any Service Fabric cluster, it is not mandatory to deploy it on primary or secondary cluster. For deploying the application you need to first generate application package, following steps describe how to generate & deploy application package:
 
 1. Clone this repo.
-1. Update the configuration as described in [Configuration section](./README.md/#Components).
+1. Update the configuration as described in [Configuration section](./README.md#configuration).
 1. Build it using Visual Studio
 1. Then deploy the generated application package to target Service Fabric cluster.
 1. Ensure that port 8080 is opened up on the corresponding load balancer and mapped to 8080 port on backend pool.

@@ -1,4 +1,7 @@
-﻿using Microsoft.ServiceFabric.Services.Remoting;
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+using Microsoft.ServiceFabric.Services.Remoting;
 using Microsoft.ServiceFabric.Services.Remoting.FabricTransport;
 using PolicyStorageService;
 using System;

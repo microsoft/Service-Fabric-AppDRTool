@@ -1,4 +1,7 @@
-﻿var app = angular.module('SFAppDRTool', ['ngRoute', 'ui.bootstrap']);
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+var app = angular.module('SFAppDRTool', ['ngRoute', 'ui.bootstrap']);
 
 runToast = function (text, displayClass) {
     Metro.toast.init().create(text, null, 5000, displayClass);

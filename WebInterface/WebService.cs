@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+using System;
 using System.Collections.Generic;
 using System.Fabric;
 using System.IO;
@@ -72,7 +75,7 @@ namespace WebInterface
             {
                 store.Open(OpenFlags.ReadOnly);
                 var certCollection = store.Certificates;
-                var currentCerts = certCollection.Find(X509FindType.FindBySubjectDistinguishedName, "CN=localhost", false);
+                var currentCerts = certCollection.Find(X509FindType.FindByThumbprint, "23946BC36E25F0C99A58D4C4A76CAA6A609587D4", false);
                 return currentCerts.Count == 0 ? null : currentCerts[0];
             }
             finally

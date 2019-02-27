@@ -1,19 +1,22 @@
 
 # Service Fabric Application Disaster Recovery Tool
-The Service Fabric Application Disaster Recovery Tool is a disaster recovery tool for Service Fabric clusters which allows users to recover their primary cluster data in the event of a disaster. SFAppDRTool allows the user to backup their primary cluster on a secondary cluster via periodic backup-restore on secondary cluster of your backups on primary cluster.   
+The Service Fabric Application Disaster Recovery Tool is a disaster recovery tool for Service Fabric applications which allows users to recover data from primary cluster in the event of a disaster. Service Fabric application disaster recovery tool allows the user to backup application data from their primary cluster and periodically restore it on a secondary cluster via periodic backup-restore feature.   
 
 ## Getting Started
-Ensure that you have setup your Service Fabric Clusters and have backups enabled on your primary, which is the one for which you want disaster recovery.
+Ensure that you have setup your Service Fabric clusters and have [backup restore service enabled](https://docs.microsoft.com/en-us/azure/service-fabric/service-fabric-backuprestoreservice-quickstart-azurecluster#enabling-backup-and-restore-service) for the primary and secondary clusters. Ensure that appropriate backup policy is applied to desired application on your primary cluster so as to satisfy RPO for your disaster recovery requirements.
 
-Clone this repo, build and then deploy this application to any Service Fabric cluster. Then after the application has started, open a web browser and locate to `https://<cluster url>:8080` where you can find the application landing page.
+### Deploy Service Fabric Application Disaster Recovery Tool 
+You need to deploy Service Fabric application disaster recovery tool on a Service Fabric cluster. Note that the application can be deployed on any Service Fabric cluster, it is not mandatory to deploy it on primary or secondary cluster. For deploying the application you need to first generate application package, following steps describe how to generate & deploy application package:
+
+1. Clone this repo.
+1. Update the configuration as described in [Configuration section](./README.md/#Components).
+1. Build it using Visual Studio
+1. Then deploy the generated application package to target Service Fabric cluster.
+1. Ensure that port 8080 is opened up on the corresponding load balancer and mapped to 8080 port on backend pool.
+
+Then after the application deployment completes successfully, open a web browser and locate to `https://<cluster url>:8080` where you can find the application landing page.
 
 Please see the [`USAGEGUIDE`](../master/USAGEGUIDE.md) for a guide to use the tool.
-
-## Components
-This application consists of three components:
- - WebInterface (stateless) : The web front-end service
- - Restore Service (stateful) : Stores partition mappings and triggers restore periodically
- - PolicyStorage Service (stateful) : Stores storage details per policy 
 
 
 ## Configuration

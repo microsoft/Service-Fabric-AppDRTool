@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.IO;
 using System.Security.Cryptography;
 using System.Runtime.Remoting.Contexts;
+using RestoreService;
 using System.Fabric;
 using System.Runtime.InteropServices;
 using System.Security;
@@ -45,12 +46,7 @@ namespace PolicyStorageService
 
         public static string GetCertThumbprint()
         {
-            CodePackageActivationContext activationContext = FabricRuntime.GetActivationContext();
-            var configurationPackage = activationContext.GetConfigurationPackageObject("Config");
-
-            string policyStorageCertThumbprint = configurationPackage.Settings.Sections["PolicyStorageSecurityConfig"].Parameters["PolicyStorageCertThumbprint"].Value;
-
-            return policyStorageCertThumbprint;
+            return Utility.GetConfigValue("PolicyStorageSecurityConfig", "PolicyStorageCertThumbprint");
         }
     }
 }

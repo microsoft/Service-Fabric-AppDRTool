@@ -1,14 +1,15 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <ApplicationManifest xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ApplicationTypeName="SFAppDRTool" ApplicationTypeVersion="1.0.0" xmlns="http://schemas.microsoft.com/2011/01/fabric">
   <Parameters>
-    <Parameter Name="PolicyStorageService_MinReplicaSetSize" DefaultValue="1" />
+    <Parameter Name="PolicyStorageService_MinReplicaSetSize" DefaultValue="3" />
     <Parameter Name="PolicyStorageService_PartitionCount" DefaultValue="1" />
-    <Parameter Name="PolicyStorageService_TargetReplicaSetSize" DefaultValue="1" />
-    <Parameter Name="WebInterface_InstanceCount" DefaultValue="1" />
-    <Parameter Name="RestoreService_MinReplicaSetSize" DefaultValue="1" />
+    <Parameter Name="PolicyStorageService_TargetReplicaSetSize" DefaultValue="3" />
+    <Parameter Name="WebInterface_InstanceCount" DefaultValue="-1" />
+    <Parameter Name="RestoreService_MinReplicaSetSize" DefaultValue="3" />
     <Parameter Name="RestoreService_PartitionCount" DefaultValue="1" />
-    <Parameter Name="RestoreService_TargetReplicaSetSize" DefaultValue="1" />
+    <Parameter Name="RestoreService_TargetReplicaSetSize" DefaultValue="3" />
     <Parameter Name="PolicyStorageCertThumbprint" DefaultValue="" />
+    <Parameter Name="RestoreDataFrequencyPeriod" DefaultValue="300000" />
   </Parameters>
   <!-- Import the ServiceManifest from the ServicePackage. The ServiceManifestName and ServiceManifestVersion 
        should match the Name and Version attributes of the ServiceManifest element defined in the 
@@ -27,14 +28,30 @@
   </ServiceManifestImport>
   <ServiceManifestImport>
     <ServiceManifestRef ServiceManifestName="WebInterfacePkg" ServiceManifestVersion="1.0.0" />
-    <ConfigOverrides />
+    <ConfigOverrides>
+      <ConfigOverride Name="Config">
+        <Settings>
+          <Section Name="PolicyStorageSecurityConfig">
+            <Parameter Name="PolicyStorageCertThumbprint" Value="[PolicyStorageCertThumbprint]" />
+          </Section>
+        </Settings>
+      </ConfigOverride>
+    </ConfigOverrides>
     <Policies>
       <EndpointBindingPolicy EndpointRef="EndpointHttps" CertificateRef="HttpsCert" />
     </Policies>
   </ServiceManifestImport>
   <ServiceManifestImport>
     <ServiceManifestRef ServiceManifestName="RestoreServicePkg" ServiceManifestVersion="1.0.0" />
-    <ConfigOverrides />
+    <ConfigOverrides>
+      <ConfigOverride Name="Config">
+        <Settings>
+          <Section Name="RestoreDataFrequencyPeriodConfig">
+            <Parameter Name="RestoreDataFrequencyPeriod" Value="[RestoreDataFrequencyPeriod]" />
+          </Section>
+        </Settings>
+      </ConfigOverride>
+    </ConfigOverrides>
   </ServiceManifestImport>
   <DefaultServices>
     <!-- The section below creates instances of service types, when an instance of this 
@@ -59,6 +76,6 @@
     </Service>
   </DefaultServices>
   <Certificates>
-    <EndpointCertificate X509StoreName="MY" X509FindValue="23946BC36E25F0C99A58D4C4A76CAA6A609587D4" Name="HttpsCert" />
+    <EndpointCertificate X509StoreName="MY" X509FindValue="697CB3185BE410C82B0A953E61D3A4632B2D7DDE" Name="HttpsCert" />
   </Certificates>
 </ApplicationManifest>

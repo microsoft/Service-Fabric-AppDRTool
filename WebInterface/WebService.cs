@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using PolicyStorageService;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.ServiceFabric.Services.Communication.AspNetCore;
@@ -75,7 +76,7 @@ namespace WebInterface
             {
                 store.Open(OpenFlags.ReadOnly);
                 var certCollection = store.Certificates;
-                var currentCerts = certCollection.Find(X509FindType.FindByThumbprint, "23946BC36E25F0C99A58D4C4A76CAA6A609587D4", false);
+                var currentCerts = certCollection.Find(X509FindType.FindByThumbprint, EncryptionUtil.GetCertThumbprint(), false);
                 return currentCerts.Count == 0 ? null : currentCerts[0];
             }
             finally

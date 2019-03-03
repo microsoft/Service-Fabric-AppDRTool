@@ -13,4 +13,7 @@
     <Parameter Name="MyParameter" Value="Value1" />
   </Section>
   -->
+  <Section Name="RestoreDataFrequencyPeriodConfig">
+    <Parameter Name="RestoreDataFrequencyPeriod" Value="" />
+  </Section>
 </Settings>

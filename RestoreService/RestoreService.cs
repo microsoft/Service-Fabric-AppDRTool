@@ -34,7 +34,7 @@ namespace RestoreService
 
         private System.Threading.Timer timer;
 
-        long periodTimeSpan = 300000; // 5 mins in ms
+        long periodTimeSpan = Utility.GetRestoreFrequencyPeriod();
 
         public RestoreService(StatefulServiceContext context)
             : base(context)

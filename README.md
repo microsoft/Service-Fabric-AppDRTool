@@ -20,11 +20,11 @@ Please see the [`USAGEGUIDE`](../master/USAGEGUIDE.md) for a guide to use the to
 
 
 ## Configuration
-Backup Policy credentials are encrypted using x509 certificate. The thumbprint of the certificate to be used should be specified at `PolicyStorageCertThumbprint` in `ApplicationParameters/Cloud.xml` for cloud deployements and similarly in `Local1Node.xml` / `Local5Node.xml` for local deployments. In case rollout of encryption certificate is required, then ensure that you rollout new certificate with previous certificate still installed on the machine. 
+Backup Policy credentials are encrypted using x509 certificate. The thumbprint of the certificate to be used should be specified at `PolicyStorageCertThumbprint` in `ApplicationParameters/Cloud.xml` for cloud deployements and similarly in `Local1Node.xml` / `Local5Node.xml` for local deployments. Specify the thumbprint in 'HttpsCert' `EndpointCertificate` under the `Certificates` tag in `ApplicationManifest.xml` as well, to be used for HTTPS connection.
 
-The thumbprint of the certificate to be used for HTTPS connection can be set in 'HttpsCert' `EndpointCertificate` under the `Certificates` tag in `ApplicationManifest.xml`. Also update the `GetCertificateFromStore` method in `WebService.cs` with your thumbprint.
+In case rollout of encryption certificate is required, then ensure that you rollout new certificate with previous certificate still installed on the machine.
 
-Restore of data to application on secondary cluster is attempted periodically every 5 mins. This scans availability of new backup from primary cluster and if available then restoring it on secondary cluster. The timespan can be changed in `RestoreService.cs`, via `periodTimeSpan`.
+Restore of data to application on secondary cluster is attempted periodically every 5 mins. This scans availability of new backup from primary cluster and if available then restores it on secondary cluster. The timespan can be changed in `RestoreDataFrequencyPeriod` in `ApplicationParameters/Cloud.xml` for cloud deployements and similarly in `Local1Node.xml` / `Local5Node.xml` for local deployments.
 
 ## Contributing
 

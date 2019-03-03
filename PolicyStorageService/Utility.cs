@@ -247,5 +247,20 @@ namespace RestoreService
             }
             
         }
+
+        public static string GetConfigValue(string sectionName, string paramName)
+        {
+            CodePackageActivationContext activationContext = FabricRuntime.GetActivationContext();
+            var configurationPackage = activationContext.GetConfigurationPackageObject("Config");
+
+            string configValue = configurationPackage.Settings.Sections[sectionName].Parameters[paramName].Value;
+
+            return configValue;
+        }
+
+        public static long GetRestoreFrequencyPeriod()
+        {
+            return Convert.ToInt64(GetConfigValue("RestoreDataFrequencyPeriodConfig", "RestoreDataFrequencyPeriod"));
+        }
     }
 }

@@ -47,19 +47,6 @@ namespace PolicyStorageService
         }
 
         /// <summary>
-        /// This is the main entry point for your service replica.
-        /// This method executes when this replica of your service becomes primary and has write status.
-        /// </summary>
-        /// <param name="cancellationToken">Canceled when Service Fabric needs to shut down this service replica.</param>
-        protected override async Task RunAsync(CancellationToken cancellationToken)
-        {
-            // TODO: Replace the following sample code with your own logic 
-            //       or remove this RunAsync override if it's not needed in your service.
-
-            
-        }
-
-        /// <summary>
         /// This is called by Restore Service to and it stores the storage details along with the policy details in the reliable dictionary
         /// </summary>
         /// <param name="policies"></param>

@@ -128,7 +128,7 @@ namespace RestoreService
             }
             catch (Exception e)
             {
-                Console.WriteLine("Exception occured.");
+                Console.WriteLine("Exception occured: " + e.Message);
                 return null;
             }
 
@@ -164,7 +164,7 @@ namespace RestoreService
             }
             catch (Exception e)
             {
-                Console.WriteLine("Exception occured.");
+                Console.WriteLine("Exception occured: " + e.Message);
                 return null;
             }
 
@@ -243,7 +243,7 @@ namespace RestoreService
 
             catch (Exception e)
             {
-                throw;
+                throw new Exception(e.Message);
             }
             
         }

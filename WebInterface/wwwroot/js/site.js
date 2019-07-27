@@ -539,14 +539,22 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
             return;
         }
 
-        if ($scope.primaryClusterHTTPEndpoint.includes("http://")) {
+        if ($scope.primaryUseWindowsCredentials) {
+            $rootScope.primaryClusterThumbprint = "WindowsCredentials";
+            $rootScope.primaryClusterCommonName = "WindowsCredentials";
+        }
+        else if ($scope.primaryClusterHTTPEndpoint.includes("http://")) {
             $rootScope.primaryClusterThumbprint = "NotExist";
             $rootScope.primaryClusterCommonName = "NotExist";
         }
 
-        if ($scope.secondaryClusterHTTPEndpoint.includes("http://")) {
+        if ($scope.secondaryUseWindowsCredentials) {
+            $rootScope.secondaryClusterThumbprint = "WindowsCredentials";
+            $rootScope.secondaryClusterCommonName = "WindowsCredentials";
+        }
+        else if ($scope.secondaryClusterHTTPEndpoint.includes("http://")) {
             $rootScope.secondaryClusterThumbprint = "NotExist";
-            $rootScope.secondaryClusterCommonName = "NotExist"
+            $rootScope.secondaryClusterCommonName = "NotExist";
         }
 
         if (!$scope.validateClusterDetails()) {
@@ -557,7 +565,7 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
         $location.path("/servConfig").search('rt', Math.random());
         $rootScope.splashLoad = true;
 
-        $http.get('api/RestoreService/apps/' + $scope.primaryClusterEndpoint + '/' + $scope.primSecureThumbp + '/' + $scope.primaryCommonName + '/' + $scope.secondaryClusterEndpoint + '/' + $scope.secSecureThumbp + '/' + $scope.secondaryCommonName)
+        $http.get('api/RestoreService/apps/' + $scope.primaryClusterEndpoint + '/' + $rootScope.primaryClusterThumbprint + '/' + $rootScope.primaryClusterCommonName + '/' + $scope.secondaryClusterEndpoint + '/' + $rootScope.secondaryClusterThumbprint + '/' + $rootScope.secondaryClusterCommonName)
             .then(function (data, status) {
                 $rootScope.splashLoad = false;
                 $scope.apps = data;
@@ -644,6 +652,8 @@ app.controller('SFAppDRToolController', ['$rootScope', '$scope', '$http', '$time
         $scope.secSecureThumbp = secondaryCluster.certificateThumbprint;
         $scope.primaryCommonName = primaryCluster.commonName;
         $scope.secondaryCommonName = secondaryCluster.commonName;
+        $scope.primaryUseWindowsCredentials = primaryCluster.certificateThumbprint === "WindowsCredentials";
+        $scope.secondaryUseWindowsCredentials = secondaryCluster.certificateThumbprint === "WindowsCredentials";
         $scope.getAppsOnPrimaryCluster();
     }
 

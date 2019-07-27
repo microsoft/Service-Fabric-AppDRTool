@@ -42,15 +42,24 @@
                         <small class="text-muted">To connect to the primary cluster</small>
                     </div>
                     <div class="form-group">
+                        <label>
+                            <input type="checkbox" ng-model="primaryUseWindowsCredentials"
+                                   data-role="hint"
+                                   data-hint-position="left"
+                                   data-hint-text="Please select if windows credentials are to be used to connect to the primary cluster." />
+                            Use Windows Credentials
+                        </label>
+                    </div>
+                    <div class="form-group">
                         <label>Secure Thumbprint</label>
-                        <input type="text" placeholder="012345678901234567890123456789" ng-model="primSecureThumbp" ng-disabled="primaryClusterHTTPEndpoint.includes('http://')"
+                        <input type="text" placeholder="012345678901234567890123456789" ng-model="primSecureThumbp" ng-disabled="primaryClusterHTTPEndpoint.includes('http://') || primaryUseWindowsCredentials"
                                data-role="hint"
                                data-hint-position="left"
                                data-hint-text="Please enter the secure certificate thumbprint to connect to your primary cluster." />
                     </div>
                     <div class="form-group">
                         <label>Common Name</label>
-                        <input type="text" placeholder="westus.cloudapp.azure.com" ng-model="primaryCommonName" ng-disabled="primaryClusterHTTPEndpoint.includes('http://')"
+                        <input type="text" placeholder="westus.cloudapp.azure.com" ng-model="primaryCommonName" ng-disabled="primaryClusterHTTPEndpoint.includes('http://') || primaryUseWindowsCredentials"
                                data-role="hint"
                                data-hint-position="left"
                                data-hint-text="Please enter the common name of your certificate to connect to your primary cluster." />
@@ -77,15 +86,23 @@
                         <small class="text-muted">To connect to the secondary cluster</small>
                     </div>
                     <div class="form-group">
+                        <label data-role="hint"
+                               data-hint-position="left"
+                               data-hint-text="Please select if windows credentials are to be used to connect to the primary cluster.">
+                            <input type="checkbox" ng-model="secondaryUseWindowsCredentials" />
+                            Use Windows Credentials
+                        </label>
+                    </div>
+                    <div class="form-group">
                         <label>Secure Thumbprint</label>
-                        <input type="text" placeholder="012345678901234567890123456789" ng-model="secSecureThumbp" ng-disabled="secondaryClusterHTTPEndpoint.includes('http://')"
+                        <input type="text" placeholder="012345678901234567890123456789" ng-model="secSecureThumbp" ng-disabled="secondaryClusterHTTPEndpoint.includes('http://') || secondaryUseWindowsCredentials"
                                data-role="hint"
                                data-hint-position="left"
                                data-hint-text="Please enter the secure certificate thumbprint to connect to your secondary cluster." />
                     </div>
                     <div class="form-group">
                         <label>Common Name</label>
-                        <input type="text" placeholder="westus.cloudapp.azure.com" ng-model="secondaryCommonName" ng-disabled="secondaryClusterHTTPEndpoint.includes('http://')"
+                        <input type="text" placeholder="westus.cloudapp.azure.com" ng-model="secondaryCommonName" ng-disabled="secondaryClusterHTTPEndpoint.includes('http://') || secondaryUseWindowsCredentials"
                                data-role="hint"
                                data-hint-position="left"
                                data-hint-text="Please enter the common name of your certificate to connect to your secondary cluster." />

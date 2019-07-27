@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<ApplicationManifest xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ApplicationTypeName="SFAppDRTool" ApplicationTypeVersion="1.0.0" xmlns="http://schemas.microsoft.com/2011/01/fabric">
+<ApplicationManifest xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ApplicationTypeName="SFAppDRTool" ApplicationTypeVersion="1.1.0" xmlns="http://schemas.microsoft.com/2011/01/fabric">
   <Parameters>
     <Parameter Name="PolicyStorageService_MinReplicaSetSize" DefaultValue="3" />
     <Parameter Name="PolicyStorageService_PartitionCount" DefaultValue="1" />
@@ -15,7 +15,7 @@
        should match the Name and Version attributes of the ServiceManifest element defined in the 
        ServiceManifest.xml file. -->
   <ServiceManifestImport>
-    <ServiceManifestRef ServiceManifestName="PolicyStorageServicePkg" ServiceManifestVersion="1.0.0" />
+    <ServiceManifestRef ServiceManifestName="PolicyStorageServicePkg" ServiceManifestVersion="1.1.0" />
     <ConfigOverrides>
       <ConfigOverride Name="Config">
         <Settings>
@@ -27,7 +27,7 @@
     </ConfigOverrides>
   </ServiceManifestImport>
   <ServiceManifestImport>
-    <ServiceManifestRef ServiceManifestName="WebInterfacePkg" ServiceManifestVersion="1.0.0" />
+    <ServiceManifestRef ServiceManifestName="WebInterfacePkg" ServiceManifestVersion="1.1.0" />
     <ConfigOverrides>
       <ConfigOverride Name="Config">
         <Settings>
@@ -42,7 +42,7 @@
     </Policies>
   </ServiceManifestImport>
   <ServiceManifestImport>
-    <ServiceManifestRef ServiceManifestName="RestoreServicePkg" ServiceManifestVersion="1.0.0" />
+    <ServiceManifestRef ServiceManifestName="RestoreServicePkg" ServiceManifestVersion="1.1.0" />
     <ConfigOverrides>
       <ConfigOverride Name="Config">
         <Settings>

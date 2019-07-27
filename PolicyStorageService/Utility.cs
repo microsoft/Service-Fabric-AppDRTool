@@ -103,7 +103,7 @@ namespace RestoreService
         {
             HttpClient client;
 
-            if (URL.Contains("https://") && certThumbprint != null && certThumbprint != "NotExist")
+            if (URL.Contains("https://") && certThumbprint != null && certThumbprint != "NotExist" && certThumbprint != "WindowsCredentials")
             {
                 X509Certificate2 clientCert = GetClientCertificate(certThumbprint);
                 WebRequestHandler requestHandler = new WebRequestHandler();
@@ -113,7 +113,7 @@ namespace RestoreService
             }
             else
             {
-                client = new HttpClient();
+                client = certThumbprint == "WindowsCredentials" ? new HttpClient(new HttpClientHandler() { UseDefaultCredentials = true }) : new HttpClient();
             }
 
             client.BaseAddress = new Uri(URL);
@@ -139,7 +139,7 @@ namespace RestoreService
         {
             HttpClient client;
 
-            if (URL.Contains("https://") && certThumbprint != null && certThumbprint != "NotExist")
+            if (URL.Contains("https://") && certThumbprint != null && certThumbprint != "NotExist" && certThumbprint != "WindowsCredentials")
             {
                 X509Certificate2 clientCert = GetClientCertificate(certThumbprint);
                 WebRequestHandler requestHandler = new WebRequestHandler();
@@ -149,7 +149,7 @@ namespace RestoreService
             }
             else
             {
-                client = new HttpClient();
+                client = certThumbprint == "WindowsCredentials" ? new HttpClient(new HttpClientHandler() { UseDefaultCredentials = true }) : new HttpClient();
             }
 
             client.BaseAddress = new Uri(URL);
@@ -228,14 +228,14 @@ namespace RestoreService
 
             try
             {
-                if (thumbprint != null && cname != null && thumbprint != "NotExist" && cname != "NotExist")
+                if (thumbprint != null && cname != null && thumbprint != "NotExist" && cname != "NotExist" && thumbprint != "WindowsCredentials" && cname != "WindowsCredentials")
                 {
                     var xc = GetCredentials(thumbprint, thumbprint, cname);
                     fc = new FabricClient(xc, connectionEndpoint);
                 }
                 else
                 {
-                    fc = new FabricClient(connectionEndpoint);
+                    fc = thumbprint == "WindowsCredentials" ? new FabricClient(new WindowsCredentials(), connectionEndpoint) : new FabricClient(connectionEndpoint);
                 }
 
                 return fc;
